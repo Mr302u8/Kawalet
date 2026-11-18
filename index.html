@@ -8,6 +8,22 @@
 :root{
   --bg:#12151a; --panel:#1b2028; --line:#2c3440; --text:#e8ecf2; --dim:#8c97a8;
   --acc:#4da3ff; --ok:#3ecf8e; --warn:#ffb020; --bad:#ff4d4d;
+  --inset:#0e1116; --btn:#262d38; --btn2:#323b49; --onacc:#04121f; --grid:#232a35; --line2:#33404f;
+}
+html[data-theme="jasny"]{
+  --bg:#f3f5f8; --panel:#ffffff; --line:#d5dbe3; --text:#1b2330; --dim:#5b6676;
+  --acc:#0a6cf0; --ok:#128a52; --warn:#c77700; --bad:#d62d2d;
+  --inset:#eef1f5; --btn:#e6ebf1; --btn2:#d6dde6; --onacc:#ffffff; --grid:#dfe5ec; --line2:#b9c3d0;
+}
+html[data-theme="warsztat"]{
+  --bg:#000000; --panel:#121212; --line:#2c2c2c; --text:#ffffff; --dim:#a6a6a6;
+  --acc:#ffb000; --ok:#38d66b; --warn:#ff6a00; --bad:#ff3b30;
+  --inset:#070707; --btn:#1f1f1f; --btn2:#303030; --onacc:#000000; --grid:#1e1e1e; --line2:#3a3a3a;
+}
+html[data-theme="morski"]{
+  --bg:#0b1a1f; --panel:#12272e; --line:#21404a; --text:#e6f4f1; --dim:#8fb2b0;
+  --acc:#2ee6c4; --ok:#7bd88f; --warn:#ffc857; --bad:#ff6b6b;
+  --inset:#08141a; --btn:#183039; --btn2:#214250; --onacc:#032421; --grid:#18323a; --line2:#2b5160;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
@@ -17,10 +33,10 @@ header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(-
 header h1{font-size:18px;margin:0;flex:0 0 auto}
 #status{flex:1;font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #status b{color:var(--text)}
-button{font:inherit;color:var(--text);background:#262d38;border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;touch-action:manipulation}
-button:active{background:#323b49}
-button.acc{background:var(--acc);border-color:var(--acc);color:#04121f;font-weight:600}
-button.ok{background:var(--ok);border-color:var(--ok);color:#04150d;font-weight:600}
+button{font:inherit;color:var(--text);background:var(--btn);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;touch-action:manipulation}
+button:active{background:var(--btn2)}
+button.acc{background:var(--acc);border-color:var(--acc);color:var(--onacc);font-weight:600}
+button.ok{background:var(--ok);border-color:var(--ok);color:var(--onacc);font-weight:600}
 button.stop{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:800;letter-spacing:.5px;min-width:84px}
 button.on{outline:2px solid var(--acc)}
 button[disabled]{opacity:.4}
@@ -37,17 +53,17 @@ nav button.active{color:var(--acc);box-shadow:inset 0 3px 0 var(--acc)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 label{font-size:14px;color:var(--dim)}
 input[type=range]{width:100%;height:36px}
-input[type=number],select{font:inherit;color:var(--text);background:#0e1116;border:1px solid var(--line);border-radius:10px;padding:10px;min-height:44px;width:100%}
-#posbar{height:14px;border-radius:7px;background:#0e1116;border:1px solid var(--line);position:relative;overflow:hidden}
+input[type=number],select{font:inherit;color:var(--text);background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:44px;width:100%}
+#posbar{height:14px;border-radius:7px;background:var(--inset);border:1px solid var(--line);position:relative;overflow:hidden}
 #posfill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--acc)}
-#pad{height:120px;border-radius:16px;background:#0e1116;border:1px solid var(--line);position:relative;touch-action:none;user-select:none}
+#pad{height:120px;border-radius:16px;background:var(--inset);border:1px solid var(--line);position:relative;touch-action:none;user-select:none}
 #pad::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:2px;background:var(--line)}
 #thumb{position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:var(--acc);opacity:.9}
 #padlbl{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:13px;color:var(--dim);pointer-events:none}
 .pm{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:4px}
 #editor{display:flex;flex-direction:column;gap:8px}
 #editor.fs{position:fixed;inset:0;z-index:50;background:var(--bg);padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
-#cwrap{position:relative;flex:1;min-height:300px;border-radius:14px;background:#0e1116;border:1px solid var(--line);overflow:hidden}
+#cwrap{position:relative;flex:1;min-height:300px;border-radius:14px;background:var(--inset);border:1px solid var(--line);overflow:hidden}
 #editor.fs #cwrap{min-height:0}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #log{font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim);max-height:160px;overflow:auto;white-space:pre-wrap}
@@ -61,6 +77,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 <header>
   <h1>Kawalet</h1>
   <div id="status">Tryb: <b>symulacja</b></div>
+  <button id="btnTheme" title="Motyw (kolory)" style="padding:8px 10px;min-width:46px">🎨</button>
   <button id="btnConn" class="acc">Połącz</button>
   <button id="btnStop" class="stop">STOP</button>
 </header>
@@ -413,10 +430,10 @@ function drawSoon(){ if(needDraw) return; needDraw=true; requestAnimationFrame((
 
 function draw(){
   if(!W||!$('#tab-crv').classList.contains('active')) return;
-  const c=getComputedStyle(document.documentElement);
+  const cs=getComputedStyle(document.documentElement), K=n=>cs.getPropertyValue(n).trim();
   cx.clearRect(0,0,W,H);
   // siatka
-  cx.font='11px -apple-system,system-ui,sans-serif'; cx.fillStyle='#8c97a8'; cx.strokeStyle='#232a35'; cx.lineWidth=1;
+  cx.font='11px -apple-system,system-ui,sans-serif'; cx.fillStyle=K('--dim'); cx.strokeStyle=K('--grid'); cx.lineWidth=1;
   for(let i=0;i<=10;i++){
     const t=i/10, x=px(t), y=py(t);
     cx.beginPath(); cx.moveTo(x,py(0)); cx.lineTo(x,py(1)); cx.stroke();
@@ -426,17 +443,17 @@ function draw(){
       cx.textAlign='right'; cx.fillText((i*10)+'%',PAD.l-5,y+4);
     }
   }
-  cx.strokeStyle='#33404f'; cx.strokeRect(px(0),py(1),px(1)-px(0),py(0)-py(1));
-  cx.fillStyle='#8c97a8'; cx.textAlign='left'; cx.fillText('B',px(0)+4,py(1)+12); cx.fillText('A',px(0)+4,py(0)-5);
+  cx.strokeStyle=K('--line2'); cx.strokeRect(px(0),py(1),px(1)-px(0),py(0)-py(1));
+  cx.fillStyle=K('--dim'); cx.textAlign='left'; cx.fillText('B',px(0)+4,py(1)+12); cx.fillText('A',px(0)+4,py(0)-5);
   // krzywa
   const P=S.pts;
-  cx.strokeStyle='#4da3ff'; cx.lineWidth=3; cx.lineJoin='round'; cx.beginPath();
+  cx.strokeStyle=K('--acc'); cx.lineWidth=3; cx.lineJoin='round'; cx.beginPath();
   for(let i=0;i<=400;i++){const t=i/400, y=yAt(P,t); i?cx.lineTo(px(t),py(y)):cx.moveTo(px(t),py(y));}
   cx.stroke();
   // uchwyty wybranego punktu
   const s=S.sel;
   if(s>=0&&s<P.length){
-    const p=P[s]; cx.lineWidth=1.5; cx.strokeStyle='#ffb020'; cx.fillStyle='#ffb020';
+    const p=P[s]; cx.lineWidth=1.5; cx.strokeStyle=K('--warn'); cx.fillStyle=K('--warn');
     const hs=[];
     if(s>0) hs.push({x:p.t-p.hi.dx,y:p.y-p.hi.dy});
     if(s<P.length-1) hs.push({x:p.t+p.ho.dx,y:p.y+p.ho.dy});
@@ -448,11 +465,11 @@ function draw(){
   // punkty
   P.forEach((p,i)=>{
     cx.beginPath(); cx.arc(px(p.t),py(p.y),i===S.sel?11:8,0,7);
-    cx.fillStyle=i===S.sel?'#ffffff':'#4da3ff'; cx.fill();
-    cx.lineWidth=2; cx.strokeStyle='#0e1116'; cx.stroke();
+    cx.fillStyle=i===S.sel?K('--text'):K('--acc'); cx.fill();
+    cx.lineWidth=2; cx.strokeStyle=K('--inset'); cx.stroke();
   });
   // znacznik pozycji urządzenia (pozioma linia) i czasu (pionowa)
-  cx.strokeStyle='rgba(62,207,142,.8)'; cx.lineWidth=1.5; cx.setLineDash([6,5]);
+  cx.strokeStyle=K('--ok'); cx.lineWidth=1.5; cx.setLineDash([6,5]);
   const yy=py(clamp(S.pos,0,1)); cx.beginPath(); cx.moveTo(px(0),yy); cx.lineTo(px(1),yy); cx.stroke();
   if(S.state==='RUN'){
     const rt=S.mode==='sim'?clamp((performance.now()-Sim.cstart)/1000/(Sim.curve?Sim.curve.dur:S.dur),0,1):clamp((performance.now()-S.runStart)/1000/S.dur,0,1);
@@ -569,11 +586,21 @@ $('#selLoad').addEventListener('change',e=>{
   e.target.value='';
 });
 
+/* ========================= MOTYWY ========================= */
+const THEMES=[['noc','Noc'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
+function setTheme(i){
+  i=((i%THEMES.length)+THEMES.length)%THEMES.length; S.theme=i;
+  const k=THEMES[i][0]; if(k==='noc') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',k);
+  store('kawalet.theme',i); drawSoon(); return THEMES[i][1];
+}
+$('#btnTheme').addEventListener('click',()=>{ const n=setTheme((S.theme||0)+1); log('Motyw: '+n); });
+
 /* ========================= START ========================= */
 (function init(){
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   clampAll(); refreshList(); renderStatus();
+  { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
   log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony 18.11');
 })();
