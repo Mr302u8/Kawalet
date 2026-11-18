@@ -137,6 +137,10 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button id="btnMelStop" class="stop" style="flex:1;min-width:80px">■ Stop</button>
     </div>
     <div class="row" style="margin-top:8px">
+      <select id="melOct" style="width:100%;min-height:46px;margin-bottom:8px" title="Wysokość dźwięku">
+        <option value="0" selected>Wysokość: normalna</option>
+        <option value="-1">Wysokość: oktawę niżej</option>
+      </select>
       <select id="melAmp" style="width:100%;min-height:46px" title="Siła dźwięku (amplituda drgań silnika)">
         <option value="16">Dźwięk: średni</option>
         <option value="32">Dźwięk: głośny</option>
@@ -245,7 +249,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 "use strict";
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const PAGE_VERSION='19.11 noc, b10';
+const PAGE_VERSION='19.11 noc, b12';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -352,38 +356,77 @@ function errText(e){   // Bluefy i inne przegladarki zwracaja bledy w roznych fo
   return parts.length?parts.join(': '):String(e);
 }
 const SVC_FULL='0000ffe0-0000-1000-8000-00805f9b34fb', CHR_FULL='0000ffe1-0000-1000-8000-00805f9b34fb';
-async function bleConnect(){
-  if(!navigator.bluetooth){ log('! Ta przegladarka nie ma Web Bluetooth (otworz strone w Bluefy).'); alert('Ta przeglądarka nie obsługuje Bluetooth.\nOtwórz tę stronę w aplikacji Bluefy.'); return; }
-  let step='wybor urzadzenia';
+function onChr(e){   // dane z modułu: linie tekstu zakończone \\n
+  bleBuf+=new TextDecoder().decode(e.target.value);
+  let i; while((i=bleBuf.indexOf('\n'))>=0){ onLine(bleBuf.slice(0,i).trim()); bleBuf=bleBuf.slice(i+1); }
+}
+let wantConn=false, reconnTimer=null, reconnTry=0, wakeLock=null, intentionalOff=false;
+async function bleGatt(){   // łączenie GATT + usługa + powiadomienia (dla już wybranego urządzenia); używane też przy ponownym łączeniu
+  let step='polaczenie GATT';
   try{
-    log('… szukam urzadzenia (wybierz Kawalet z listy)');
-    bleDev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SVC_FULL]});
-    log('… wybrano: '+(bleDev.name||'(bez nazwy)'));
-    bleDev.addEventListener('gattserverdisconnected',()=>{clearInterval(hbTimer);S.connected=false;S.state='ROZŁĄCZONY';log('! Bluetooth rozłączony');renderStatus();});
-    step='polaczenie GATT'; log('… lacze (GATT)');
-    const srv=await bleDev.gatt.connect();
-    step='usluga FFE0'; log('… szukam uslugi FFE0');
-    const svc=await srv.getPrimaryService(SVC_FULL);
-    step='charakterystyka FFE1'; log('… szukam charakterystyki FFE1');
-    bleChr=await svc.getCharacteristic(CHR_FULL);
-    step='powiadomienia'; log('… wlaczam powiadomienia');
-    await bleChr.startNotifications();
-    bleChr.addEventListener('characteristicvaluechanged',e=>{
-      bleBuf+=new TextDecoder().decode(e.target.value);
-      let i; while((i=bleBuf.indexOf('\n'))>=0){ onLine(bleBuf.slice(0,i).trim()); bleBuf=bleBuf.slice(i+1); }
-    });
-    S.mode='ble'; S.connected=true; S.state='POŁĄCZONY';
+    log('… lacze (GATT)'); const srv=await bleDev.gatt.connect();
+    step='usluga FFE0'; const svc=await srv.getPrimaryService(SVC_FULL);
+    step='charakterystyka FFE1'; bleChr=await svc.getCharacteristic(CHR_FULL);
+    step='powiadomienia'; await bleChr.startNotifications();
+    bleBuf=''; bleChr.removeEventListener('characteristicvaluechanged',onChr); bleChr.addEventListener('characteristicvaluechanged',onChr);
+    S.mode='ble'; S.connected=true; S.state='POŁĄCZONY'; reconnTry=0; clearTimeout(reconnTimer);
+    store('kawalet.autoconn',true);
     log('Połączono z '+(bleDev.name||'modułem'));
     sendLine('VER'); sendLine('PING'); setTimeout(()=>sendLine('INFO',true),600); if(store('kawalet.params')){ sendLine('SPD '+S.spd); sendLine('RAMP '+S.ramp); }
     clearInterval(hbTimer); hbTimer=setInterval(()=>{ if(S.mode==='ble'&&S.connected) sendLine('PING',true); },1000);   // sygnał "żyję": Teensy wysyła status tylko, gdy telefon się odzywa
-  }catch(e){ log('! blad w kroku "'+step+'": '+errText(e)); }
-  renderStatus();
+    keepAwake(true);
+    renderStatus(); return true;
+  }catch(e){ log('! blad w kroku "'+step+'": '+errText(e)); renderStatus(); return false; }
+}
+function onBleDropped(){
+  clearInterval(hbTimer); S.connected=false; S.state='ROZŁĄCZONY'; log('! Bluetooth rozłączony'); renderStatus(); keepAwake(false);
+  if(wantConn&&!intentionalOff) scheduleReconnect();
+}
+function scheduleReconnect(){
+  clearTimeout(reconnTimer); if(!wantConn||intentionalOff||!bleDev) return;
+  reconnTry++; const wait=Math.min(1500*reconnTry,8000);
+  S.state='ŁĄCZĘ PONOWNIE ('+reconnTry+')…'; renderStatus();
+  reconnTimer=setTimeout(async()=>{
+    if(!wantConn||intentionalOff||S.connected) return;
+    const ok=await bleGatt();
+    if(!ok&&wantConn&&!intentionalOff&&reconnTry<40) scheduleReconnect();
+    else if(!ok){ S.state='ROZŁĄCZONY'; renderStatus(); log('! Nie udało się połączyć ponownie – naciśnij Połącz'); }
+  },wait);
+}
+async function keepAwake(on){   // ekran nie gaśnie podczas połączenia (zgaszony ekran zrywa Bluetooth w przeglądarce)
+  try{
+    if(on&&'wakeLock' in navigator&&!wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{wakeLock=null}); }
+    else if(!on&&wakeLock){ await wakeLock.release(); wakeLock=null; }
+  }catch(e){ wakeLock=null; }
+}
+async function bleConnect(){
+  if(!navigator.bluetooth){ log('! Ta przegladarka nie ma Web Bluetooth (otworz strone w Bluefy).'); alert('Ta przeglądarka nie obsługuje Bluetooth.\nOtwórz tę stronę w aplikacji Bluefy.'); return; }
+  intentionalOff=false; wantConn=true; clearTimeout(reconnTimer);
+  try{
+    if(!bleDev){   // pierwsze połączenie: wybór urządzenia z listy (potem pamięta je do końca sesji strony)
+      log('… szukam urzadzenia (wybierz Kawalet z listy)');
+      bleDev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SVC_FULL]});
+      log('… wybrano: '+(bleDev.name||'(bez nazwy)'));
+      bleDev.addEventListener('gattserverdisconnected',onBleDropped);
+    }
+    const ok=await bleGatt(); if(!ok){ reconnTry=0; scheduleReconnect(); }
+  }catch(e){ wantConn=false; log('! blad w kroku "wybor urzadzenia": '+errText(e)); renderStatus(); }
 }
 function bleDisconnect(){
-  clearInterval(hbTimer);
+  intentionalOff=true; wantConn=false; clearTimeout(reconnTimer); store('kawalet.autoconn',false);
+  clearInterval(hbTimer); keepAwake(false);
   try{ if(bleDev&&bleDev.gatt.connected) bleDev.gatt.disconnect(); }catch(e){}
   S.mode='sim'; S.connected=false; S.state='IDLE'; renderStatus();
 }
+async function bleRestoreOnLoad(){   // po odświeżeniu strony: wróć do wcześniej dozwolonego urządzenia (jeśli przeglądarka to umożliwia)
+  try{
+    if(!navigator.bluetooth||!navigator.bluetooth.getDevices||!store('kawalet.autoconn')) return;
+    const devs=await navigator.bluetooth.getDevices(); if(!devs.length) return;
+    bleDev=devs.find(d=>/kawalet/i.test(d.name||''))||devs[0]; bleDev.addEventListener('gattserverdisconnected',onBleDropped);
+    wantConn=true; intentionalOff=false; log('… wracam do poprzedniego urządzenia: '+(bleDev.name||'?')); reconnTry=0; scheduleReconnect();
+  }catch(e){ log('Automatyczne łączenie po odświeżeniu niedostępne w tej przeglądarce: '+errText(e)); }
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&wantConn&&!S.connected&&bleDev&&!intentionalOff){ reconnTry=0; scheduleReconnect(); } if(!document.hidden&&S.connected) keepAwake(true); });
 function onLine(l){
   if(!l) return;
   const w=l.split(/\s+/);
@@ -902,8 +945,10 @@ $('#btnMelPlay').addEventListener('click',()=>{
   if(S.mode==='ble'&&!S.connected){alert('Najpierw połącz się z Kawaletem.');return}
   if(S.mode==='ble'&&!S.melAsked){ if(!confirm('Stół zagra melodię silnikiem. Stół ma stać, nic na nim nie powinno leżeć, a Ty masz mieć pod ręką STOP. Zagrać?')) return; S.melAsked=true; }
   try{store('kawalet.melAmp',$('#melAmp').value)}catch(e){}
-  sendLine('MEL PLAY '+$('#melAmp').value);
+  try{store('kawalet.melOct',$('#melOct').value)}catch(e){}
+  sendLine('MEL PLAY '+$('#melAmp').value+' '+$('#melOct').value);
 });
+(function(){ const o=store('kawalet.melOct'); if(o) $('#melOct').value=o; })();
 (function(){ const a=store('kawalet.melAmp'); if(a){ $('#melAmp').value=a; if($('#melAmp').value!==String(a)) $('#melAmp').value='48'; } })();
 
 /* ========================= MOTYWY ========================= */
@@ -928,6 +973,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.curPreset=null;S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
   clampAll(); refreshList(); renderStatus(); markPreset();
   { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
+  setTimeout(bleRestoreOnLoad,300);
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
   log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony '+PAGE_VERSION);
 })();
