@@ -6,7 +6,7 @@ Plik: `index.html` (jeden plik, bez zależności). Działa w trybie **symulacji*
 - **Sterowanie:** pole jazdy na żywo (przesuwanie palcem w lewo/prawo, puszczenie = stop; wysyła `JOG` co 100 ms), HOME, Ustaw A/B, Idź do A/B, STOP, E-STOP, suwaki prędkości (1–22) i rampy (0–100 %), pasek pozycji A→B.
 - **Krzywa:** edytor na cały ekran: oś pozioma = czas ruchu (w %), pionowa = położenie od A (dół) do B (góra). Dotknięcie pustego miejsca = nowy punkt; dotknięcie punktu = uchwyty Béziera (kwadraty) do ustawiania ramp; „Gładki" = symetryczne uchwyty; „Usuń punkt"; gotowe układy (A→B, A→B→A, zygzak); zapis krzywych w telefonie; czas ruchu w sekundach.
 - **Wysyłanie:** „Wyślij do Kawaleta" wgrywa krzywą (`CURVE BEGIN`, `K …`, `CURVE END`), „Start" dodatkowo wysyła `CURVE RUN` (dziś Teensy odpowiada, że ruch po krzywej nie jest włączony; strona pokazuje komunikat).
-- **Motywy kolorów (przycisk 🎨 w nagłówku):** Noc (domyślny), Jasny, Warsztat (czerń z bursztynem, duży kontrast), Morski. Wybór zapamiętuje się w telefonie. Kolory zdefiniowane są jako zmienne CSS na początku pliku (`:root` i `html[data-theme=…]`); można dopisać własny motyw.
+- **Motywy kolorów (przycisk 🎨 w nagłówku):** Szkło (domyślny, ciemne szkło z pomarańczowym akcentem), Jasny, Warsztat (czerń z bursztynem, duży kontrast), Morski. Wybór zapamiętuje się w telefonie. Kolory zdefiniowane są jako zmienne CSS na początku pliku (`:root` i `html[data-theme=…]`); można dopisać własny motyw.
 - **Bezpieczeństwo strony:** po ukryciu strony wysyła `STOP`; `PING` co sekundę (bez niego Teensy nie rozsyła statusu).
 
 ## Użycie

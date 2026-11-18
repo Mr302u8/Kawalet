@@ -6,21 +6,25 @@
 <title>Kawalet</title>
 <style>
 :root{
-  --bg:#12151a; --panel:#1b2028; --line:#2c3440; --text:#e8ecf2; --dim:#8c97a8;
-  --acc:#4da3ff; --ok:#3ecf8e; --warn:#ffb020; --bad:#ff4d4d;
-  --inset:#0e1116; --btn:#262d38; --btn2:#323b49; --onacc:#04121f; --grid:#232a35; --line2:#33404f;
+  --bg:#17191d; --panel:rgba(255,255,255,.07); --line:rgba(255,255,255,.13); --text:#f1f3f6; --dim:#9aa1ad;
+  --acc:#ff5a1f; --ok:#3ecf8e; --warn:#ffb020; --bad:#ff3b30;
+  --inset:rgba(0,0,0,.38); --btn:rgba(255,255,255,.09); --btn2:rgba(255,255,255,.2); --onacc:#ffffff; --grid:rgba(255,255,255,.08); --line2:rgba(255,255,255,.22);
+  --glow:rgba(255,90,31,.20); --glow2:rgba(110,130,190,.14); --blur:blur(22px) saturate(140%); --shadow:0 8px 30px rgba(0,0,0,.35);
 }
 html[data-theme="jasny"]{
+  --glow:rgba(10,108,240,.12); --glow2:rgba(255,255,255,0); --shadow:0 6px 20px rgba(30,50,80,.12);
   --bg:#f3f5f8; --panel:#ffffff; --line:#d5dbe3; --text:#1b2330; --dim:#5b6676;
   --acc:#0a6cf0; --ok:#128a52; --warn:#c77700; --bad:#d62d2d;
   --inset:#eef1f5; --btn:#e6ebf1; --btn2:#d6dde6; --onacc:#ffffff; --grid:#dfe5ec; --line2:#b9c3d0;
 }
 html[data-theme="warsztat"]{
+  --glow:rgba(255,176,0,.14); --glow2:rgba(255,106,0,.08);
   --bg:#000000; --panel:#121212; --line:#2c2c2c; --text:#ffffff; --dim:#a6a6a6;
   --acc:#ffb000; --ok:#38d66b; --warn:#ff6a00; --bad:#ff3b30;
   --inset:#070707; --btn:#1f1f1f; --btn2:#303030; --onacc:#000000; --grid:#1e1e1e; --line2:#3a3a3a;
 }
 html[data-theme="morski"]{
+  --glow:rgba(46,230,196,.15); --glow2:rgba(60,120,200,.10);
   --bg:#0b1a1f; --panel:#12272e; --line:#21404a; --text:#e6f4f1; --dim:#8fb2b0;
   --acc:#2ee6c4; --ok:#7bd88f; --warn:#ffc857; --bad:#ff6b6b;
   --inset:#08141a; --btn:#183039; --btn2:#214250; --onacc:#032421; --grid:#18323a; --line2:#2b5160;
@@ -28,14 +32,15 @@ html[data-theme="morski"]{
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
   font:16px/1.35 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
-body{display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+body{background:radial-gradient(900px 520px at 85% -8%,var(--glow),transparent 62%),radial-gradient(800px 500px at -10% 108%,var(--glow2),transparent 60%),var(--bg);display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 16px;margin:8px 10px 0;background:var(--panel);border:1px solid var(--line);border-radius:26px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
 header h1{font-size:18px;margin:0;flex:0 0 auto}
 #status{flex:1;font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #status b{color:var(--text)}
-button{font:inherit;color:var(--text);background:var(--btn);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;touch-action:manipulation}
+button{font:inherit;color:var(--text);background:var(--btn);border:1px solid var(--line);border-radius:16px;padding:12px 14px;min-height:46px;touch-action:manipulation;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);transition:background .15s,transform .08s}
+button:active{transform:scale(.97)}
 button:active{background:var(--btn2)}
-button.acc{background:var(--acc);border-color:var(--acc);color:var(--onacc);font-weight:600}
+button.acc{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 70%,#000));border-color:transparent;color:var(--onacc);font-weight:600;box-shadow:0 4px 18px color-mix(in srgb,var(--acc) 40%,transparent)}
 button.ok{background:var(--ok);border-color:var(--ok);color:var(--onacc);font-weight:600}
 button.stop{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:800;letter-spacing:.5px;min-width:84px}
 button.on{outline:2px solid var(--acc)}
@@ -43,34 +48,34 @@ button[disabled]{opacity:.4}
 main{flex:1;min-height:0;overflow:auto;position:relative}
 .tab{display:none;padding:12px;min-height:100%}
 .tab.active{display:block}
-nav{display:flex;border-top:1px solid var(--line);background:var(--panel)}
-nav button{flex:1;border:0;border-radius:0;background:transparent;min-height:52px;color:var(--dim)}
-nav button.active{color:var(--acc);box-shadow:inset 0 3px 0 var(--acc)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
-.card h2{font-size:13px;color:var(--dim);margin:0 0 8px;text-transform:uppercase;letter-spacing:.6px}
+nav{display:flex;gap:4px;padding:5px;margin:6px 14px 8px;border:1px solid var(--line);border-radius:28px;background:var(--panel);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
+nav button{flex:1;border:0;border-radius:22px;background:transparent;min-height:46px;color:var(--dim);box-shadow:none}
+nav button.active{color:var(--text);background:var(--btn2);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:14px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
+.card h2{font-size:14px;color:var(--text);margin:0 0 10px;font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 label{font-size:14px;color:var(--dim)}
-input[type=range]{width:100%;height:36px}
+input[type=range]{width:100%;height:36px;accent-color:var(--acc)}
 input[type=number],select{font:inherit;color:var(--text);background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:44px;width:100%}
 #posbar{height:14px;border-radius:7px;background:var(--inset);border:1px solid var(--line);position:relative;overflow:hidden}
 #posfill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--acc)}
-#pad{height:120px;border-radius:16px;background:var(--inset);border:1px solid var(--line);position:relative;touch-action:none;user-select:none}
+#pad{height:130px;border-radius:26px;background:var(--inset);border:1px solid var(--line);position:relative;touch-action:none;user-select:none}
 #pad::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:2px;background:var(--line)}
-#thumb{position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:var(--acc);opacity:.9}
+#thumb{position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--acc) 60%,#fff),var(--acc));box-shadow:0 0 28px color-mix(in srgb,var(--acc) 60%,transparent)}
 #padlbl{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:13px;color:var(--dim);pointer-events:none}
 .pm{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:4px}
 #editor{display:flex;flex-direction:column;gap:8px}
 #editor.fs{position:fixed;inset:0;z-index:50;background:var(--bg);padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
-#cwrap{position:relative;flex:1;min-height:300px;border-radius:14px;background:var(--inset);border:1px solid var(--line);overflow:hidden}
+#cwrap{position:relative;flex:1;min-height:300px;border-radius:24px;background:var(--inset);border:1px solid var(--line);overflow:hidden}
 #editor.fs #cwrap{min-height:0}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #log{font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim);max-height:160px;overflow:auto;white-space:pre-wrap}
 .small{font-size:12px;color:var(--dim)}
 .tool{display:flex;gap:6px;flex-wrap:wrap}
 .tool button{padding:8px 10px;min-height:40px;font-size:14px}
-dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:24px}
 </style>
 </head>
 <body>
@@ -609,7 +614,7 @@ $('#selLoad').addEventListener('change',e=>{
 });
 
 /* ========================= MOTYWY ========================= */
-const THEMES=[['noc','Noc'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
+const THEMES=[['noc','Szkło'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
 function setTheme(i){
   i=((i%THEMES.length)+THEMES.length)%THEMES.length; S.theme=i;
   const k=THEMES[i][0]; if(k==='noc') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',k);
