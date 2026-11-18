@@ -133,12 +133,15 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
   <div class="card">
     <h2>Melodia</h2>
     <div class="row" style="gap:8px">
-      <button id="btnMelPlay" class="acc" style="flex:1">▶ Zagraj</button>
-      <select id="melAmp" style="width:auto;min-height:46px" title="Siła dźwięku (amplituda drgań silnika)">
-        <option value="8">Dźwięk: cichy</option>
+      <button id="btnMelPlay" class="acc" style="flex:2">▶ Zagraj od początku</button>
+      <button id="btnMelStop" class="stop" style="flex:1;min-width:80px">■ Stop</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <select id="melAmp" style="width:100%;min-height:46px" title="Siła dźwięku (amplituda drgań silnika)">
         <option value="16">Dźwięk: średni</option>
-        <option value="28" selected>Dźwięk: głośny</option>
-        <option value="40">Dźwięk: maks.</option>
+        <option value="32">Dźwięk: głośny</option>
+        <option value="48" selected>Dźwięk: bardzo głośny</option>
+        <option value="80">Dźwięk: maksymalny</option>
       </select>
     </div>
     <div style="font-size:12px;opacity:.7;margin-top:6px">Stół stoi w miejscu, silnik drga z częstotliwością nut i wraca do pozycji startowej. STOP przerywa. Tylko przy stojącym stole.</div>
@@ -148,6 +151,8 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
     <h2>Opcje</h2>
     <button id="btnBoot" style="width:100%">Tryb programowania (BOOT)</button>
     <button id="btnDefaults" style="width:100%;margin-top:8px">Przywróć ustawienia domyślne</button>
+    <button id="btnForce" style="width:100%;margin-top:8px">Wymuś aktualizację strony</button>
+    <div id="verTxt" style="font-size:12px;opacity:.7;margin-top:6px"></div>
     <div style="font-size:12px;opacity:.7;margin-top:6px">Kasuje zapamiętane: krzywe robocze (A→B, A→B→A, Zygzak), prędkość, rampę, tryb drogi, motyw. Zapisane pod nazwą krzywe i hasło chmury zostają.</div>
     <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
   </div>
@@ -195,18 +200,26 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
 
     <div class="params">
-      <div class="prow"><label>Prędkość (poziom)</label><input id="spdn" type="number" min="1" max="22" step="0.1" value="10"><input id="spd2" type="range" min="1" max="22" step="0.1" value="10"></div>
-      <div class="prow"><label>Rampa [%]</label><input id="rampn" type="number" min="0" max="100" step="0.5" value="50"><input id="ramp2" type="range" min="0" max="100" step="0.5" value="50"></div>
-      <div class="prow"><label>Czas [s]</label><input id="dur" type="number" min="0.5" max="3600" step="0.1" value="10"><input id="durSl" type="range" min="1" max="120" step="0.5" value="10"></div>
-      <div class="prow"><label>Tempo: <b id="tempov">100</b>% → <b id="tdurv">10</b> s</label><span></span><input id="tempo" type="range" min="25" max="400" step="5" value="100"></div>
       <div class="row" style="gap:6px">
         <button id="modeAB" class="on" style="padding:8px 12px;min-height:40px;font-size:14px">Między A i B</button>
         <button id="modeRel" style="padding:8px 12px;min-height:40px;font-size:14px">Od teraz o N obrotów</button>
         <button id="dirBtn" style="padding:8px 14px;min-height:40px;font-size:18px;display:none" title="Kierunek: → w stronę B (jak pad w prawo), ← w stronę A">→</button>
       </div>
-      <div class="prow"><label>Droga [obroty]</label><input id="revs" type="number" min="0" step="0.01" placeholder="np. 2"><span class="small">Kroków na obrót: <input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta" style="width:90px;min-height:34px;padding:4px"></span></div>
-      <div class="small" id="spanInfo"></div>
-      <div class="prow"><label>Droga A→B [°] (opcja)</label><input id="span" type="number" min="0" max="3600" step="1" placeholder="—"><span class="small" id="cinfo"></span></div>
+      <div class="small">Co ma się <b>wyliczać</b> (pozostałe dwa ustawiasz):</div>
+      <div class="row" style="gap:6px">
+        <button class="calcb" data-calc="spd" style="padding:8px 12px;min-height:40px;font-size:14px">prędkość</button>
+        <button class="calcb" data-calc="time" style="padding:8px 12px;min-height:40px;font-size:14px">czas</button>
+        <button class="calcb" data-calc="revs" style="padding:8px 12px;min-height:40px;font-size:14px">obroty</button>
+      </div>
+      <div class="prow"><label>Obroty</label><input id="revs" type="number" min="0" step="0.01" placeholder="np. 2"><input id="revsSl" type="range" min="0.05" max="20" step="0.05" value="2"></div>
+      <div class="prow"><label>Czas [s]</label><input id="dur" type="number" min="0.5" max="3600" step="0.1" value="10"><input id="durSl" type="range" min="1" max="120" step="0.5" value="10"></div>
+      <div class="prow"><label>Prędkość (poziom)</label><input id="spdn" type="number" min="1" max="22" step="0.1" value="10"><input id="spd2" type="range" min="1" max="22" step="0.1" value="10"></div>
+      <div class="prow"><label>Kroków na obrót</label><input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta"><span class="small" id="spanInfo"></span></div>
+      <details class="small"><summary>Zaawansowane</summary>
+        <div class="prow" style="margin-top:8px"><label>Limit przyspieszenia (rampa %)</label><input id="rampn" type="number" min="0" max="100" step="0.5" value="50"><input id="ramp2" type="range" min="0" max="100" step="0.5" value="50"></div>
+        <div class="small" style="margin:4px 0 8px">Zwykle nie trzeba ruszać: przyspieszenie wynika z kształtu krzywej. To tylko górny limit bezpieczeństwa.</div>
+        <div class="prow"><label>Droga A→B [°] (opcja)</label><input id="span" type="number" min="0" max="3600" step="1" placeholder="—"><span class="small" id="cinfo"></span></div>
+      </details>
     </div>
 
     <div class="jogpad" style="height:90px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
@@ -232,6 +245,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 "use strict";
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const PAGE_VERSION='19.11 noc, b10';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -407,7 +421,7 @@ const Sim={
       } else if(w[1]==='RUN'){
         if(!this.curve){reply('ERR brak krzywej');return}
         this.cstart=performance.now();this.state='RUN';this.target=null;reply('OK RUN');
-      } else if(w[1]==='ABORT'){if(this.state==='RUN')this.state='IDLE';reply('OK ABORT')}
+      } else if(w[1]==='LIM'){reply('OK CURVE LIM')} else if(w[1]==='ABORT'){if(this.state==='RUN')this.state='IDLE';reply('OK ABORT')}
     }
     else if(c==='K'&&this.tmp){
       const n=w.slice(2).map(Number); // t y hi.dx hi.dy ho.dx ho.dy  [promile]
@@ -450,16 +464,22 @@ $('#btnStop').addEventListener('click',()=>{sendLine('STOP');sendLine('CURVE ABO
 $('#btnEstop').addEventListener('click',()=>{sendLine('ESTOP')});
 $('#btnDefaults').addEventListener('click',()=>{
   if(!confirm('Przywrócić ustawienia domyślne? Krzywe robocze, prędkość, rampa, tryb drogi i motyw wrócą do początkowych. Zapisane krzywe i hasło chmury zostają.')) return;
-  ['kawalet.last','kawalet.presets','kawalet.curPreset','kawalet.params','kawalet.rel','kawalet.span','kawalet.theme'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  ['kawalet.last','kawalet.presets','kawalet.curPreset','kawalet.params','kawalet.cparams','kawalet.rel','kawalet.span','kawalet.theme'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
   location.reload();
+});
+$('#verTxt').textContent='Wersja strony: '+PAGE_VERSION;
+$('#btnForce').addEventListener('click',async()=>{
+  try{ if('serviceWorker' in navigator){ const rs=await navigator.serviceWorker.getRegistrations(); for(const r of rs) await r.unregister(); }
+       if(window.caches){ const ks=await caches.keys(); for(const k of ks) await caches.delete(k); } }catch(e){}
+  location.href=location.pathname+'?v='+Date.now();
 });
 $('#btnBoot').addEventListener('click',()=>{if(confirm('Przełączyć Kawalet w tryb programowania?\nSterowanie przestanie działać do ponownego uruchomienia (wyłącz i włącz zasilanie).'))sendLine('BOOT')});
 $('#btnConn').addEventListener('click',()=>{ if(S.mode==='ble'&&S.connected) bleDisconnect(); else bleConnect(); });
 function saveParams(){store('kawalet.params',{spd:S.spd,ramp:S.ramp})}
-function setSpdUI(v){v=Math.round(clamp(v,1,22)*10)/10;S.spd=v;saveParams();drawSoon();$('#spdv').textContent=v;['#spd','#spd2','#spdn'].forEach(i=>{if(document.activeElement!==$(i))$(i).value=v})}
-function setRampUI(v){v=Math.round(clamp(v,0,100)*2)/2;S.ramp=v;saveParams();drawSoon();$('#rampv').textContent=v;['#ramp','#ramp2','#rampn'].forEach(i=>{if(document.activeElement!==$(i))$(i).value=v})}
-['#spd','#spd2','#spdn'].forEach(i=>{$(i).addEventListener('input',e=>{if(e.target.value!=='')setSpdUI(+e.target.value)});$(i).addEventListener('change',()=>sendLine('SPD '+S.spd))});
-['#ramp','#ramp2','#rampn'].forEach(i=>{$(i).addEventListener('input',e=>{if(e.target.value!=='')setRampUI(+e.target.value)});$(i).addEventListener('change',()=>sendLine('RAMP '+S.ramp))});
+function setSpdUI(v){v=Math.round(clamp(v,1,22)*10)/10;S.spd=v;saveParams();$('#spdv').textContent=v;['#spd'].forEach(i=>{if(document.activeElement!==$(i))$(i).value=v})}
+function setRampUI(v){v=Math.round(clamp(v,0,100)*2)/2;S.ramp=v;saveParams();$('#rampv').textContent=v;['#ramp'].forEach(i=>{if(document.activeElement!==$(i))$(i).value=v})}
+['#spd'].forEach(i=>{$(i).addEventListener('input',e=>{if(e.target.value!=='')setSpdUI(+e.target.value)});$(i).addEventListener('change',()=>sendLine('SPD '+S.spd))});
+['#ramp'].forEach(i=>{$(i).addEventListener('input',e=>{if(e.target.value!=='')setRampUI(+e.target.value)});$(i).addEventListener('change',()=>sendLine('RAMP '+S.ramp))});
 
 // Pady do przesuwania na żywo (w zakładce Sterowanie i w zakładce Krzywa)
 document.querySelectorAll('.jogpad').forEach(function(pad){
@@ -517,7 +537,7 @@ function draw(){
   if(!W||!$('#tab-crv').classList.contains('active')) return;
   const cs=getComputedStyle(document.documentElement), K=n=>cs.getPropertyValue(n).trim();
   cx.clearRect(0,0,W,H);
-  syncTempo(); updateFeas();
+  updateFeas();
   // siatka
   cx.font='11px -apple-system,system-ui,sans-serif'; cx.fillStyle=K('--dim'); cx.strokeStyle=K('--grid'); cx.lineWidth=1;
   for(let i=0;i<=10;i++){
@@ -659,50 +679,63 @@ $('#btnReset').addEventListener('click',()=>{
   histPush(snap(),true); S.curPreset=name; delete presetStore[name]; store('kawalet.presets',presetStore);
   S.pts=presetPts(name); S.sel=1; clampAll(); markPreset(); draw(); persist(); scrubUpdate(false);
 });
-/* ---- wykonalność krzywej: najkrótszy czas przy danej prędkości i rampie ---- */
-function curveLimits(){
-  const N=300, T=S.dur, ys=[]; for(let i=0;i<=N;i++) ys.push(yAt(S.pts,i/N));
-  const dt=T/N, v=[]; let vm=0, am=0;
-  for(let i=0;i<N;i++){ v.push((ys[i+1]-ys[i])/dt); vm=Math.max(vm,Math.abs(v[i])); }
-  for(let i=0;i<N-1;i++) am=Math.max(am,Math.abs(v[i+1]-v[i])/dt);
-  return {vm,am};
+/* ---- obroty / czas / prędkość są powiązane: wybierasz, co ma się wyliczać, pozostałe dwa ustawiasz ---- */
+S.calc='spd'; S.cspd=10; S.cramp=50;
+function curveNorm(){   // znormalizowany (czas 1) szczyt prędkości i przyspieszenia krzywej, jako ułamek drogi
+  const N=300, ys=[]; for(let i=0;i<=N;i++) ys.push(yAt(S.pts,i/N));
+  const dt=1/N, v=[]; let vn=0, an=0;
+  for(let i=0;i<N;i++){ v.push((ys[i+1]-ys[i])/dt); vn=Math.max(vn,Math.abs(v[i])); }
+  for(let i=0;i<N-1;i++) an=Math.max(an,Math.abs(v[i+1]-v[i])/dt);
+  return {vn,an};
 }
-function capacity(){
-  const vmax=2000+1000*S.spd, vcap=Math.min(vmax,24000), acc=500+70*S.ramp;
-  return {vmax,vcap,acc,aMax:Math.max(vmax*vmax/(2*acc),3000)};
+function ccap(){ const vmax=2000+1000*S.cspd, vcap=Math.min(vmax,24000), acc=500+70*S.cramp; return {vcap,acc,aMax:Math.max(vcap*vcap/(2*acc),3000)}; }
+const MV=1.1, MA=1.2;   // zapasy: prędkość 10 %, przyspieszenie 20 %
+function solveCalc(){
+  recomputeSpan(); const spr=S.spr||0; let D=S.spanSteps||0; const n=curveNorm(); let over=false;
+  if(S.calc==='revs'&&!S.relMode) S.calc='spd';
+  if(n.vn>1e-6){
+    if(S.calc==='time'){
+      if(D>0){ const c=ccap(); let T=Math.max(MV*n.vn*D/c.vcap, Math.sqrt(MA*n.an*D/c.aMax)); S.dur=Math.min(3600,Math.max(0.5,Math.ceil(T*10)/10)); }
+    } else if(S.calc==='spd'){
+      if(D>0&&S.dur>0){ const acc=500+70*S.cramp, T=S.dur; const vN=Math.max(MV*n.vn*D/T, Math.sqrt(2*acc*MA*n.an*D/(T*T)), 3000); let lv=Math.max(1,Math.ceil((vN-2000)/100)/10); if(lv>22){lv=22;over=true} S.cspd=lv; }
+    } else if(S.calc==='revs'){
+      if(spr>0){ const c=ccap(); const Dm=Math.min(c.vcap*S.dur/(MV*n.vn), c.aMax*S.dur*S.dur/(MA*n.an)); S.revs=Math.max(0,Math.floor(Dm/spr*100)/100); recomputeSpan(); D=S.spanSteps||0; }
+    }
+  }
+  const c=ccap(); let tmin=0, vReq=0, aReq=0;
+  if(D>0&&n.vn>1e-6){ tmin=Math.max(MV*n.vn*D/c.vcap, Math.sqrt(MA*n.an*D/c.aMax)); vReq=n.vn*D/S.dur; aReq=n.an*D/(S.dur*S.dur); }
+  S.feas={D,c,n,tmin,vReq,aReq,over,ok:D>0&&!over&&S.dur>=tmin-0.06};
 }
-function feasibility(){
-  recomputeSpan(); const span=S.spanSteps||0; if(!span) return null;
-  const L=curveLimits(), c=capacity(), vReq=L.vm*span, aReq=L.am*span;
-  const tv=S.dur*vReq/c.vcap, ta=S.dur*Math.sqrt(aReq/c.aMax), tmin=Math.max(tv,ta);
-  return {span,c,vReq,aReq,tv,ta,tmin,ok:S.dur>=tmin*1.1, rec:Math.ceil(tmin*1.15*10)/10};
-}
-function neededLevel(f){   // najmniejszy poziom prędkości (co 0,1), przy którym krzywa w ustawionym czasie jest wykonalna (z zapasem)
-  const acc=500+70*S.ramp, vN=Math.max(f.vReq*1.15, Math.sqrt(2*acc*f.aReq*1.2), 3000), lvl=Math.ceil((vN-2000)/100)/10;
-  return lvl>22?null:Math.max(1,lvl);
+function saveCParams(){ store('kawalet.cparams',{cspd:S.cspd,cramp:S.cramp,calc:S.calc}); }
+function renderCalc(){
+  const set=(id,v)=>{ const e=$(id); if(e&&document.activeElement!==e) e.value=v; };
+  set('#dur',S.dur); set('#durSl',Math.min(120,S.dur)); set('#spdn',S.cspd); set('#spd2',S.cspd); set('#rampn',S.cramp); set('#ramp2',S.cramp);
+  const rv=S.relMode?S.revs:(S.abSteps&&S.spr?Math.round(S.abSteps/S.spr*100)/100:S.revs); set('#revs',rv||''); set('#revsSl',Math.min(20,rv||0.05));
+  const lock={spd:S.calc==='spd',time:S.calc==='time',revs:S.calc==='revs'||(!S.relMode&&!!S.abSteps)};
+  ['#spdn','#spd2'].forEach(i=>{$(i).disabled=lock.spd}); ['#dur','#durSl'].forEach(i=>{$(i).disabled=lock.time}); ['#revs','#revsSl'].forEach(i=>{$(i).disabled=lock.revs});
+  $('#revsSl').style.display=S.relMode?'':'none';
+  document.querySelectorAll('.calcb').forEach(b=>{ b.classList.toggle('on',b.dataset.calc===S.calc); if(b.dataset.calc==='revs') b.disabled=!S.relMode; });
 }
 function updateFeas(){
-  const f=feasibility(), el=$('#feas'); S.feas=f; if(!el) return;
-  let html;
-  if(!f){ html='Podaj drogę (obroty i kroki na obrót) albo ustaw A i B przy połączonym Kawalecie — pokażę najkrótszy możliwy czas.'; }
+  const el=$('#feas'); if(!el) return; const dur0=S.dur, spd0=S.cspd;
+  solveCalc(); renderCalc(); if(S.dur!==dur0) persist(); if(S.cspd!==spd0) saveCParams();
+  const f=S.feas; let html;
+  if(!f.D){ html='Podaj drogę (obroty i kroki na obrót) albo ustaw A i B przy połączonym Kawalecie — pokażę prędkość, czas i wykonalność.'; }
   else{
-    const fmt=n=>(Math.round(n*10)/10), nl=f.ok?null:neededLevel(f);
+    const fmt=n=>(Math.round(n*10)/10), spr=S.spr||0;
     html=(f.ok?'<b style="color:var(--ok)">✔ Wykonalne.</b> ':'<b style="color:var(--bad)">⚠ Za szybko — stół nie nadąży.</b> ')
-      +'Droga '+f.span.toLocaleString('pl')+' kr, poziom '+S.spd+' (maks. '+f.c.vcap.toLocaleString('pl')+' kr/s), rampa '+S.ramp+'% ('+Math.round(f.c.acc).toLocaleString('pl')+' kr).'
-      +'<br>Najkrótszy czas: <b>'+fmt(f.tmin)+' s</b> (wg prędkości '+fmt(f.tv)+' s, wg rampy '+fmt(f.ta)+' s). Ustawiony: <b>'+S.dur+' s</b>.'
-      +(f.ok?'':'<br><button id="btnFit" style="padding:4px 10px;min-height:32px;font-size:13px">Dopasuj czas ('+fmt(f.rec)+' s)</button> '
-        +(nl?'<button id="btnFitSpd" style="padding:4px 10px;min-height:32px;font-size:13px">Dopasuj prędkość (poziom '+nl+')</button>':'<span>Nawet poziom 22 nie wystarczy — wydłuż czas.</span>'));
+      +'Szczyt prędkości: <b>'+Math.round(f.vReq).toLocaleString('pl')+' kr/s</b>'+(spr?' = '+fmt(f.vReq/spr*60)+' obr/min stołu':'')+', poziom <b>'+S.cspd+'</b> (limit '+Math.round(f.c.vcap).toLocaleString('pl')+' kr/s).'
+      +'<br>Przyspieszenie: '+Math.round(100*f.aReq*MA/f.c.aMax)+'% limitu. Czas <b>'+S.dur+' s</b>, najkrótszy możliwy przy tym poziomie: '+fmt(f.tmin)+' s.'
+      +(f.ok?'':'<br>'+(f.over?'Nawet poziom 22 nie wystarcza. ':'')+'<button id="btnFit" style="padding:4px 10px;min-height:32px;font-size:13px">Ustaw najkrótszy czas ('+fmt(f.tmin)+' s)</button>');
   }
   if(html!==S._feasHtml){ S._feasHtml=html; el.innerHTML=html; }   // nie przebudowuj ramki, gdy nic się nie zmieniło (inaczej przycisk znikał między dotknięciem a puszczeniem)
 }
 $('#feas').addEventListener('click',e=>{
-  const f=S.feas; if(!f) return; const id=e.target.id;
-  if(id==='btnFit'){ S.dur=f.rec; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); }
-  else if(id==='btnFitSpd'){ const nl=neededLevel(f); if(nl){ setSpdUI(nl); sendLine('SPD '+nl); draw(); } }
+  if(e.target.id==='btnFit'){ S.calc='time'; saveCParams(); draw(); scrubUpdate(false); }
 });
-/* ---- tempo przejazdu: ta sama krzywa, inny czas ---- */
-function syncTempo(){ if(document.activeElement!==$('#durSl')) $('#durSl').value=Math.min(120,S.dur); if(S.dur!==S._tempoDur){ S.baseDur=S.dur; S.tempo=100; S._tempoDur=S.dur; $('#tempo').value=100; } $('#tempov').textContent=S.tempo; $('#tdurv').textContent=S.dur; }
-$('#tempo').addEventListener('input',e=>{ S.tempo=+e.target.value; S.dur=clamp(Math.round(S.baseDur*100/S.tempo*10)/10,0.5,3600); S._tempoDur=S.dur; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); });
+document.querySelectorAll('.calcb').forEach(b=>b.addEventListener('click',()=>{ if(b.disabled) return; S.calc=b.dataset.calc; saveCParams(); draw(); }));
+['#spdn','#spd2'].forEach(i=>$(i).addEventListener('input',e=>{ if(e.target.value!==''){ S.cspd=Math.round(clamp(+e.target.value,1,22)*10)/10; saveCParams(); draw(); } }));
+['#rampn','#ramp2'].forEach(i=>$(i).addEventListener('input',e=>{ if(e.target.value!==''){ S.cramp=Math.round(clamp(+e.target.value,0,100)*2)/2; saveCParams(); draw(); } }));
 /* ---- droga w obrotach: między A i B albo od bieżącej pozycji o N obrotów ---- */
 S.relMode=false; S.relDir=1; S.revs=2; S.spr=0; S.abSteps=0;
 function recomputeSpan(){
@@ -724,9 +757,10 @@ function updateSpanUI(){
 $('#modeAB').addEventListener('click',()=>{S.relMode=false;updateSpanUI();draw()});
 $('#modeRel').addEventListener('click',()=>{S.relMode=true;updateSpanUI();draw()});
 $('#dirBtn').addEventListener('click',()=>{S.relDir=-S.relDir;updateSpanUI();draw()});
+$('#revsSl').addEventListener('input',e=>{ S.revs=+e.target.value; updateSpanUI(); draw(); });
 $('#revs').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0){ if(S.relMode) S.revs=v; else { S.abSteps=0; S.revs=v; } updateSpanUI(); draw(); } });
 $('#spr').addEventListener('input',e=>{ S.spr=Math.max(0,Math.round(+e.target.value||0)); updateSpanUI(); draw(); });
-$('#durSl').addEventListener('input',e=>{ S.dur=+e.target.value; S._tempoDur=null; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); });
+$('#durSl').addEventListener('input',e=>{ S.dur=+e.target.value; persist(); draw(); scrubUpdate(false); });
 /* ---- suwak czasu (podgląd i jazda stołu) ---- */
 let scrubLast=0;
 function scrubUpdate(send){
@@ -740,8 +774,8 @@ function scrubUpdate(send){
 $('#scrub').addEventListener('input',()=>scrubUpdate(true));
 $('#scrub').addEventListener('change',()=>scrubUpdate('final'));
 $('#span').addEventListener('change',e=>{S.span=clamp(+e.target.value||0,0,3600);e.target.value=S.span||'';store('kawalet.span',S.span);draw()});
-$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,0.5,3600);e.target.value=S.dur;persist();draw();scrubUpdate(false)});
 $('#dur').addEventListener('input',e=>{const v=+e.target.value; if(v>=0.5){S.dur=Math.min(v,3600);persist();draw();scrubUpdate(false)}});
+$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,0.5,3600);persist();draw();scrubUpdate(false)});
 $('#btnFs').addEventListener('click',()=>{
   const ed=$('#editor'); ed.classList.toggle('fs');
   $('#btnFs').textContent=ed.classList.contains('fs')?'Zamknij pełny ekran':'Pełny ekran';
@@ -770,6 +804,7 @@ $('#btnRun').addEventListener('click',async()=>{
   if(S.mode==='ble'&&!confirm('START: silnik ruszy po krzywej.\nSprawdź, czy nic nie stoi na stole i że masz pod ręką STOP.')) return;
   await uploadCurve();
   await sleep(S.mode==='ble'?200:60);
+  { const c=ccap(); sendLine('CURVE LIM '+Math.round(c.vcap)+' '+Math.round(c.aMax)); await sleep(S.mode==='ble'?250:20); }   // prędkość i przyspieszenie tej krzywej (niezależnie od ręcznych ustawień)
   S.runStart=performance.now(); recomputeSpan(); sendLine(S.relMode?('CURVE RUN REL '+(S.relDir*S.spanSteps)):'CURVE RUN');   // stan zmieni się dopiero po odpowiedzi/statusie z Kawaleta
 });
 $('#btnAbort').addEventListener('click',()=>{sendLine('CURVE ABORT');sendLine('STOP')});
@@ -862,13 +897,14 @@ $('#btnCDn').addEventListener('click',async()=>{
 });
 
 /* ========================= MELODIA ========================= */
+$('#btnMelStop').addEventListener('click',()=>{ sendLine('MEL STOP'); sendLine('STOP',true); });
 $('#btnMelPlay').addEventListener('click',()=>{
   if(S.mode==='ble'&&!S.connected){alert('Najpierw połącz się z Kawaletem.');return}
-  if(S.mode==='ble'&&!confirm('Stół zagra melodię silnikiem. Stół ma stać, nic na nim nie powinno leżeć, a Ty masz mieć pod ręką STOP. Zagrać?')) return;
+  if(S.mode==='ble'&&!S.melAsked){ if(!confirm('Stół zagra melodię silnikiem. Stół ma stać, nic na nim nie powinno leżeć, a Ty masz mieć pod ręką STOP. Zagrać?')) return; S.melAsked=true; }
   try{store('kawalet.melAmp',$('#melAmp').value)}catch(e){}
   sendLine('MEL PLAY '+$('#melAmp').value);
 });
-(function(){ const a=store('kawalet.melAmp'); if(a) $('#melAmp').value=a; })();
+(function(){ const a=store('kawalet.melAmp'); if(a){ $('#melAmp').value=a; if($('#melAmp').value!==String(a)) $('#melAmp').value='48'; } })();
 
 /* ========================= MOTYWY ========================= */
 const THEMES=[['noc','Szkło'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
@@ -885,6 +921,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
+  { const cp=store('kawalet.cparams'); if(cp){ S.cspd=+cp.cspd||10; S.cramp=cp.cramp===undefined?50:+cp.cramp; S.calc=cp.calc||'spd'; } }
   { const pr=store('kawalet.params'); if(pr){ setSpdUI(+pr.spd||10); setRampUI(pr.ramp===undefined?50:+pr.ramp); } }
   { const r=store('kawalet.rel'); if(r){S.relMode=!!r.rel;S.revs=+r.revs||2;S.relDir=r.dir<0?-1:1;S.spr=+r.spr||0} updateSpanUI(); }
   scrubUpdate(false);
@@ -892,7 +929,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   clampAll(); refreshList(); renderStatus(); markPreset();
   { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
-  log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony 18.11');
+  log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony '+PAGE_VERSION);
 })();
 </script>
 </body>
