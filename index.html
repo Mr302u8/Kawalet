@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="pl">
+<html lang="pl" data-theme="retro">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Kawalet</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#17191d">
+<meta name="theme-color" content="#fdf0e0">
 <meta name="apple-mobile-web-app-title" content="Kawalet">
 <style>
 :root{
@@ -33,6 +33,38 @@ html[data-theme="morski"]{
   --acc:#2ee6c4; --ok:#7bd88f; --warn:#ffc857; --bad:#ff6b6b;
   --inset:#08141a; --btn:#183039; --btn2:#214250; --onacc:#032421; --grid:#18323a; --line2:#2b5160;
 }
+html[data-theme="retro"]{
+  --bg:#fdf0e0; --panel:#fff7ea; --line:#ecd6b8; --text:#4a2433; --dim:#8c6b5e;
+  --acc:#e8705f; --ok:#2f9c8d; --warn:#e89b2d; --bad:#d6453a;
+  --inset:#f7e6cc; --btn:#f6dcb8; --btn2:#f0b050; --onacc:#ffffff; --grid:#ecd6b8; --line2:#d8b78c;
+  --glow:rgba(240,176,80,.20); --glow2:rgba(154,207,200,.22); --blur:none; --shadow:0 4px 14px rgba(120,70,40,.10);
+  --t1:#f0b050; --t2:#9acfc8; --t3:#e8705f; --t4:#f6dcb8; --ink:#4a2433;
+}
+:root{--t1:var(--btn2);--t2:var(--btn);--t3:var(--bad);--t4:var(--btn);--ink:var(--text)}
+html[data-theme="retro"] body{font-family:ui-rounded,"SF Pro Rounded","Nunito",-apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+html[data-theme="retro"] button{border-color:rgba(74,36,51,.14);color:var(--ink)}
+html[data-theme="retro"] button.acc{background:var(--t3);color:#fff;border-color:transparent;box-shadow:0 3px 0 rgba(74,36,51,.18)}
+html[data-theme="retro"] button.ok{background:var(--t2);color:var(--ink);border-color:transparent;box-shadow:0 3px 0 rgba(74,36,51,.14)}
+html[data-theme="retro"] button.stop{background:#d6453a;color:#fff;border-color:transparent}
+html[data-theme="retro"] #tabs button.active{background:var(--t1);color:var(--ink)}
+html[data-theme="retro"] .card,html[data-theme="retro"] .params,html[data-theme="retro"] .posbox,html[data-theme="retro"] header{box-shadow:var(--shadow)}
+.ic{width:1.2em;height:1.2em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.22em;margin-right:.4em;flex:none}
+.iconbtn .ic,.tile .ic{margin-right:0}
+#btnSend,#btnRun,#btnAbort{white-space:nowrap;padding:12px 8px}
+.iconbtn{padding:8px 11px!important;min-width:42px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 6px!important;min-height:86px;border-radius:22px!important;font-weight:600;font-size:14px;line-height:1.1;text-align:center;color:var(--ink)!important;border:0!important;box-shadow:0 3px 0 rgba(0,0,0,.12)}
+.tile:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12)}
+.tile .ic{width:32px;height:32px;stroke-width:1.8}
+.tile.sm{min-height:62px;padding:8px 4px!important;font-size:12.5px;gap:3px;border-radius:18px!important}
+.tile.sm .ic{width:24px;height:24px}
+.t-orange{background:var(--t1)!important}.t-teal{background:var(--t2)!important}.t-coral{background:var(--t3)!important;color:#fff!important}.t-beige{background:var(--t4)!important}
+.dcard>summary{list-style:none;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px;font-size:15px;min-height:30px}
+.dcard>summary::-webkit-details-marker{display:none}
+.dcard>summary::after{content:'▾';margin-left:auto;opacity:.55}
+.dcard[open]>summary::after{content:'▴'}
+.dcard>summary .ic{width:22px;height:22px;margin:0}
+.dcard .dbody{margin-top:10px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
   font:16px/1.35 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
@@ -48,11 +80,17 @@ button.acc{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--
 button.ok{background:var(--ok);border-color:var(--ok);color:var(--onacc);font-weight:600}
 button.stop{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:800;letter-spacing:.5px;min-width:84px}
 button.on{outline:2px solid var(--acc)}
+#tabs{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:18px;background:var(--inset)}
+#tabs button{min-height:34px;padding:6px 12px;font-size:14px;border-radius:14px;border:0;background:transparent;color:var(--dim);box-shadow:none}
+#tabs button.active{background:var(--btn2);color:var(--text);font-weight:600}
+header button{padding:8px 12px;min-height:40px}
+header{gap:6px}
+@media(max-width:560px){header{flex-wrap:wrap;row-gap:6px;padding-left:12px}header h1{font-size:17px}header button{padding:8px 10px;font-size:14px}#tabs{order:10;flex:1 1 100%}#tabs button{flex:1}#status{order:11;flex:1 1 100%;white-space:normal}h1{flex:1 1 auto}}
 button[disabled]{opacity:.4}
 main{flex:1;min-height:0;overflow:auto;position:relative}
 .tab{display:none;padding:12px;min-height:100%}
 .tab.active{display:block}
-nav{display:flex;gap:4px;padding:5px;margin:6px 14px 8px;border:1px solid var(--line);border-radius:28px;background:var(--panel);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
+#unused-nav{display:flex;gap:4px;padding:5px;margin:6px 14px 8px;border:1px solid var(--line);border-radius:28px;background:var(--panel);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
 nav button{flex:1;border:0;border-radius:22px;background:transparent;min-height:46px;color:var(--dim);box-shadow:none}
 nav button.active{color:var(--text);background:var(--btn2);font-weight:600}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:14px;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
@@ -77,9 +115,34 @@ input[type=number],select{font:inherit;color:var(--text);background:var(--inset)
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #log{font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim);max-height:160px;overflow:auto;white-space:pre-wrap}
 .small{font-size:12px;color:var(--dim)}
+.toolsel{width:auto;min-height:40px;padding:6px 8px;border-radius:12px}
+.chartRow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px;align-items:stretch}
+#chartCol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sidecol{display:flex;flex-direction:column;gap:6px}
+.sidecol button{padding:8px 6px;min-height:42px;font-size:13px}
+@media(max-width:560px){.chartRow{grid-template-columns:1fr}.sidecol{flex-direction:row;flex-wrap:wrap}.sidecol button{flex:1 1 30%}}
+#scrubWrap input[type=range]{width:100%;height:30px}
+.ctrlgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+@media(max-width:560px){.ctrlgrid{grid-template-columns:1fr}}
+.ctrlgrid .prow{grid-template-columns:minmax(0,1fr) 84px}
+.ctrlgrid .prow input[type=range]{grid-column:1/-1}
+.posbox{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.posbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.posbtns button{padding:8px 6px;min-height:40px;font-size:14px}
+.librow{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.libname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.librow button{padding:6px 8px;min-height:34px;font-size:13px}
+#libDlg{width:min(94vw,520px);max-height:86vh;overflow:auto}
+#libDlg::backdrop{background:rgba(0,0,0,.55)}
+#editor.fs .chartRow{flex:1;min-height:0}
+#editor.fs #chartCol{height:100%}
+#editor.fs #cwrap{flex:1;min-height:0}
 .params{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
 .prow{display:grid;grid-template-columns:150px 92px 1fr;gap:8px;align-items:center}
 .prow label{font-size:13px}
+.lockb{padding:2px 6px!important;min-height:28px!important;font-size:14px!important;border-radius:10px!important;vertical-align:middle}
+.lockb.on{outline:2px solid var(--acc)}
+.prow input.auto{border-color:var(--acc)!important;box-shadow:0 0 0 1px var(--acc)}
 .prow input[type=number]{min-height:38px;padding:6px 8px}
 @media(max-width:480px){.prow{grid-template-columns:110px 84px 1fr}}
 .tool{display:flex;gap:6px;flex-wrap:wrap}
@@ -90,10 +153,14 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 <body>
 <header>
   <h1>Kawalet</h1>
+  <div id="tabs">
+    <button id="nav-ctl" class="active">Sterowanie</button>
+    <button id="nav-crv">Krzywa</button>
+  </div>
   <div id="status">Tryb: <b>symulacja</b></div>
-  <button id="btnTheme" title="Motyw (kolory)" style="padding:8px 10px;min-width:46px">🎨</button>
-  <button id="btnConn" class="acc">Połącz</button>
-  <button id="btnStop" class="stop">STOP</button>
+  <button id="btnTheme" class="iconbtn" data-ico="palette" title="Motyw (kolory)"></button>
+  <button id="btnConn" class="acc" data-ico="bluetooth">Połącz</button>
+  <button id="btnStop" class="stop" data-ico="stop">STOP</button>
 </header>
 
 <main>
@@ -112,155 +179,220 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 
   <div class="card">
     <h2>Polecenia</h2>
-    <div class="grid3">
-      <button data-cmd="HOME">HOME</button>
-      <button data-cmd="SETA">Ustaw A</button>
-      <button data-cmd="SETB">Ustaw B</button>
-      <button data-cmd="GOA" class="acc">Idź do A</button>
-      <button data-cmd="GOB" class="acc">Idź do B</button>
-      <button id="btnEstop" class="stop">E-STOP</button>
+    <div class="tiles">
+      <button class="tile t-beige" data-cmd="HOME" data-ico="home">HOME</button>
+      <button class="tile t-teal" data-cmd="SETA" data-ico="pinA">Ustaw A</button>
+      <button class="tile t-teal" data-cmd="SETB" data-ico="pinB">Ustaw B</button>
+      <button class="tile t-orange" data-cmd="GOA" data-ico="goto">Idź do A</button>
+      <button class="tile t-orange" data-cmd="GOB" data-ico="goto">Idź do B</button>
+      <button class="tile t-coral" id="btnEstop" data-ico="alert">E-STOP</button>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Prędkość i rampy</h2>
-    <label>Prędkość maksymalna: <b id="spdv">10</b> / 22</label>
-    <input id="spd" type="range" min="1" max="22" step="0.1" value="10">
-    <label>Rampa (łagodność): <b id="rampv">50</b> %</label>
-    <input id="ramp" type="range" min="0" max="100" value="50">
-  </div>
-
-  <div class="card">
-    <h2>Melodia</h2>
-    <div class="row" style="gap:8px">
-      <button id="btnMelPlay" class="acc" style="flex:2">▶ Zagraj od początku</button>
-      <button id="btnMelStop" class="stop" style="flex:1;min-width:80px">■ Stop</button>
+  <details class="card dcard" open>
+    <summary data-ico="sliders">Prędkość i rampy</summary>
+    <div class="dbody">
+      <label>Prędkość maksymalna: <b id="spdv">10</b> / 22</label>
+      <input id="spd" type="range" min="1" max="22" step="0.1" value="10">
+      <label>Rampa (łagodność): <b id="rampv">50</b> %</label>
+      <input id="ramp" type="range" min="0" max="100" value="50">
     </div>
-    <div class="row" style="margin-top:8px">
-      <select id="melTempo" style="width:100%;min-height:46px;margin-bottom:8px" title="Tempo melodii">
-        <option value="160">Tempo: wolno (ok. 70 s)</option>
-        <option value="120" selected>Tempo: normalne (ok. 50 s)</option>
-        <option value="95">Tempo: szybko (ok. 40 s)</option>
-        <option value="75">Tempo: bardzo szybko (ok. 31 s)</option>
-      </select>
-      <select id="melStac" style="width:100%;min-height:46px;margin-bottom:8px" title="Sposób grania nut">
-        <option value="1" selected>Nuty: pianino (staccato)</option>
-        <option value="2">Nuty: bardzo krótko</option>
-        <option value="0">Nuty: ciągłe (organy)</option>
-      </select>
-      <select id="melOct" style="width:100%;min-height:46px;margin-bottom:8px" title="Wysokość dźwięku (przesunięcie w półtonach)">
-        <option value="-13" selected>Wysokość: jak w grze pianina (niska)</option>
-        <option value="-12">Wysokość: oktawę niżej</option>
-        <option value="-1">Wysokość: półtonu niżej</option>
-        <option value="0">Wysokość: wysoka (cis4)</option>
-      </select>
-      <select id="melAmp" style="width:100%;min-height:46px" title="Siła dźwięku (amplituda drgań silnika)">
-        <option value="16">Dźwięk: średni</option>
-        <option value="32">Dźwięk: głośny</option>
-        <option value="48" selected>Dźwięk: bardzo głośny</option>
-        <option value="80">Dźwięk: maksymalny</option>
-      </select>
+  </details>
+
+  <details class="card dcard">
+    <summary data-ico="music">Melodia</summary>
+    <div class="dbody">
+      <div class="row" style="gap:8px">
+        <button id="btnMelPlay" class="acc" data-ico="play" style="flex:2">Zagraj od początku</button>
+        <button id="btnMelStop" class="stop" data-ico="stop" style="flex:1;min-width:80px">Stop</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="melTempo" style="width:100%;min-height:46px;margin-bottom:8px" title="Tempo melodii">
+          <option value="160">Tempo: wolno (ok. 70 s)</option>
+          <option value="120" selected>Tempo: normalne (ok. 50 s)</option>
+          <option value="95">Tempo: szybko (ok. 40 s)</option>
+          <option value="75">Tempo: bardzo szybko (ok. 31 s)</option>
+        </select>
+        <select id="melStac" style="width:100%;min-height:46px;margin-bottom:8px" title="Sposób grania nut">
+          <option value="1" selected>Nuty: pianino (staccato)</option>
+          <option value="2">Nuty: bardzo krótko</option>
+          <option value="0">Nuty: ciągłe (organy)</option>
+        </select>
+        <select id="melOct" style="width:100%;min-height:46px;margin-bottom:8px" title="Wysokość dźwięku (przesunięcie w półtonach)">
+          <option value="-13" selected>Wysokość: jak w grze pianina (niska)</option>
+          <option value="-12">Wysokość: oktawę niżej</option>
+          <option value="-1">Wysokość: półtonu niżej</option>
+          <option value="0">Wysokość: wysoka (cis4)</option>
+        </select>
+        <select id="melAmp" style="width:100%;min-height:46px" title="Siła dźwięku (amplituda drgań silnika)">
+          <option value="16">Dźwięk: średni</option>
+          <option value="32">Dźwięk: głośny</option>
+          <option value="48" selected>Dźwięk: bardzo głośny</option>
+          <option value="80">Dźwięk: maksymalny</option>
+        </select>
+      </div>
+      <div style="font-size:12px;opacity:.7;margin-top:6px">Stół stoi w miejscu, silnik drga z częstotliwością nut i wraca do pozycji startowej. STOP przerywa. Tylko przy stojącym stole.</div>
     </div>
-    <div style="font-size:12px;opacity:.7;margin-top:6px">Stół stoi w miejscu, silnik drga z częstotliwością nut i wraca do pozycji startowej. STOP przerywa. Tylko przy stojącym stole.</div>
-  </div>
+  </details>
 
-  <div class="card">
-    <h2>Opcje</h2>
-    <button id="btnBoot" style="width:100%">Tryb programowania (BOOT)</button>
-    <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
-    <button id="btnForce" style="width:100%;margin-top:8px">Wymuś aktualizację strony</button>
-    <div id="verTxt" style="font-size:12px;opacity:.7;margin-top:6px"></div>
-  </div>
+  <details class="card dcard">
+    <summary data-ico="gear">Opcje</summary>
+    <div class="dbody">
+      <button id="btnBoot" data-ico="gear" style="width:100%">Tryb programowania (BOOT)</button>
+      <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
+      <button id="btnForce" data-ico="reset" style="width:100%;margin-top:8px">Wymuś aktualizację strony</button>
+      <div id="verTxt" style="font-size:12px;opacity:.7;margin-top:6px"></div>
+    </div>
+  </details>
 
-  <div class="card">
-    <h2>Komunikaty</h2>
-    <div id="log"></div>
-  </div>
+  <details class="card dcard">
+    <summary data-ico="list">Komunikaty</summary>
+    <div class="dbody"><div id="log"></div></div>
+  </details>
 </section>
 
 <!-- ============ KRZYWA ============ -->
 <section id="tab-crv" class="tab">
   <div id="editor">
     <div class="tool">
-      <button id="btnFs">Pełny ekran</button>
-      <button id="btnUndo" disabled>↶ Cofnij</button>
-      <button id="btnRedo" disabled>↷ Ponów</button>
-      <button id="btnDel">Usuń punkt</button>
-      <button id="btnMirror" class="on">Gładki</button>
-      <button data-preset="ab">A→B</button>
-      <button data-preset="aba">A→B→A</button>
-      <button data-preset="zig">Zygzak</button>
-      <button id="btnReset" title="Przywróć podstawową wersję wybranej krzywej">↺ Reset</button>
-      <button id="btnSave">Zapisz…</button>
-      <select id="selLoad" style="width:auto;min-height:40px;padding:6px"><option value="">Wczytaj…</option></select>
-      <button id="btnExp">Eksport</button>
-      <button id="btnImp">Import</button>
-      <button id="btnLnk">Link</button>
-      <button id="btnCUp" title="Wyślij krzywe do chmury">☁ Wyślij</button>
-      <button id="btnCDn" title="Pobierz krzywe z chmury">☁ Pobierz</button>
-      <input id="fileImp" type="file" accept=".json,application/json,text/plain" style="display:none">
+      <select id="presetSel" class="toolsel" title="Rodzaj krzywej">
+        <option value="ab">Rodzaj: A→B</option>
+        <option value="aba">Rodzaj: A→B→A</option>
+        <option value="zig">Rodzaj: Zygzak</option>
+        <option value="">Rodzaj: własna (wczytana)</option>
+      </select>
+      <button id="btnUndo" class="iconbtn" data-ico="undo" disabled title="Cofnij"></button>
+      <button id="btnRedo" class="iconbtn" data-ico="redo" disabled title="Ponów"></button>
+      <button id="btnDel" class="iconbtn" data-ico="trash" title="Usuń zaznaczony punkt"></button>
+      <button id="btnMirror" class="iconbtn on" data-ico="smooth" title="Gładkie węzły: gdy włączone, uchwyty punktu są symetryczne (ruszasz jeden, drugi porusza się lustrzanie), więc krzywa przechodzi przez punkt płynnie. Wyłączone: uchwyty niezależne, można zrobić ostry róg."></button>
+      <button id="btnFs" class="iconbtn" data-ico="expand" title="Pełny ekran"></button>
+      <span style="display:none"><button data-preset="ab"></button><button data-preset="aba"></button><button data-preset="zig"></button></span>
     </div>
-    <div id="cwrap"><canvas id="cv"></canvas></div>
-    <div class="row" id="scrubRow">
-      <label style="flex:0 0 auto">Przesuwanie</label>
-      <input id="scrub" type="range" min="0" max="100" step="0.5" value="0" style="flex:1;min-width:120px">
-      <b id="scrubv" class="small" style="min-width:150px;text-align:right;color:var(--text)"></b>
+
+    <div class="chartRow">
+      <div id="chartCol">
+        <div id="cwrap"><canvas id="cv"></canvas></div>
+        <div id="scrubWrap">
+          <input id="scrub" type="range" min="0" max="100" step="0.5" value="0" title="Przesuwanie po krzywej (możesz też przeciągać kropkę na wykresie)">
+          <div class="small"><b id="scrubv" style="color:var(--text)"></b></div>
+        </div>
+        <label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="scrubGo" checked> Stół jedzie za kropką (do pozycji krzywej w tej chwili)</label>
+      </div>
+      <div class="sidecol">
+        <button id="btnReset" class="tile sm t-beige" data-ico="reset" title="Przywróć podstawową wersję wybranej krzywej">Reset</button>
+        <button id="btnSave" class="tile sm t-teal" data-ico="save" title="Zapisz bieżącą krzywą pod nazwą (do listy tego rodzaju)">Zapisz</button>
+        <button id="btnLib" class="tile sm t-orange" data-ico="folder" title="Zapisane krzywe: wczytaj, zmień nazwę, usuń, eksport, chmura">Krzywe</button>
+      </div>
     </div>
-    <label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="scrubGo" checked> Stół jedzie za suwakiem (do pozycji krzywej w tej chwili)</label>
+
     <div class="row">
-      <button id="btnSend" class="acc" style="flex:1">Wyślij do Kawaleta</button>
-      <button id="btnRun" class="ok" style="flex:1">Start</button>
-      <button id="btnAbort" style="flex:1">Przerwij</button>
+      <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
+      <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
+      <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
     </div>
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
 
-    <div class="params">
-      <div class="row" style="gap:6px">
-        <button id="modeAB" class="on" style="padding:8px 12px;min-height:40px;font-size:14px">Między A i B</button>
-        <button id="modeRel" style="padding:8px 12px;min-height:40px;font-size:14px">Od teraz o N obrotów</button>
-        <button id="dirBtn" style="padding:8px 14px;min-height:40px;font-size:18px;display:none" title="Kierunek: → w stronę B (jak pad w prawo), ← w stronę A">→</button>
+    <div class="ctrlgrid">
+      <div class="params">
+        <div class="row" style="gap:6px;flex-wrap:nowrap">
+          <select id="modeSel" class="toolsel" style="flex:1" title="Rodzaj ruchu">
+            <option value="ab">Ruch: między A i B</option>
+            <option value="rel">Ruch: od teraz o N obrotów</option>
+          </select>
+          <button id="dirBtn" style="padding:8px 14px;min-height:40px;font-size:18px;display:none" title="Kierunek: → w stronę B (jak pad w prawo), ← w stronę A">→</button>
+          <span style="display:none"><button id="modeAB"></button><button id="modeRel"></button></span>
+        </div>
+        <div class="prow"><label>Obroty <button class="lockb" data-lock="revs" title="Zablokuj: ta wartość się nie zmieni, gdy ustawiasz inne">🔓</button></label><input id="revs" type="number" min="0" step="0.01" placeholder="np. 2"><input id="revsSl" type="range" min="0.05" max="20" step="0.05" value="2"></div>
+        <div class="prow"><label>Czas [s] <button class="lockb" data-lock="time" title="Zablokuj: ta wartość się nie zmieni, gdy ustawiasz inne">🔓</button></label><input id="dur" type="number" min="0.5" max="3600" step="0.1" value="10"><input id="durSl" type="range" min="1" max="120" step="0.5" value="10"></div>
+        <div class="prow"><label>Prędkość <button class="lockb" data-lock="spd" title="Zablokuj: ta wartość się nie zmieni, gdy ustawiasz inne">🔓</button></label><input id="spdn" type="number" min="1" max="22" step="0.1" value="10"><input id="spd2" type="range" min="1" max="22" step="0.1" value="10"></div>
+        <div class="prow"><label>Rampa [%]</label><input id="rampn" type="number" min="0" max="100" step="0.5" value="50"><input id="ramp2" type="range" min="0" max="100" step="0.5" value="50"></div>
+        <div class="small" id="spanInfo"></div>
+        <details class="small"><summary>Więcej</summary>
+          <div class="prow" style="margin-top:8px"><label>Kroków na obrót</label><input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta"></div>
+          <div class="prow" style="margin-top:8px"><label>Droga A→B [°] (opcja)</label><input id="span" type="number" min="0" max="3600" step="1" placeholder="—"></div>
+          <span class="small" id="cinfo"></span>
+        </details>
       </div>
-      <div class="small">Co ma się <b>wyliczać</b> (pozostałe dwa ustawiasz):</div>
-      <div class="row" style="gap:6px">
-        <button class="calcb" data-calc="spd" style="padding:8px 12px;min-height:40px;font-size:14px">prędkość</button>
-        <button class="calcb" data-calc="time" style="padding:8px 12px;min-height:40px;font-size:14px">czas</button>
-        <button class="calcb" data-calc="revs" style="padding:8px 12px;min-height:40px;font-size:14px">obroty</button>
-      </div>
-      <div class="prow"><label>Obroty</label><input id="revs" type="number" min="0" step="0.01" placeholder="np. 2"><input id="revsSl" type="range" min="0.05" max="20" step="0.05" value="2"></div>
-      <div class="prow"><label>Czas [s]</label><input id="dur" type="number" min="0.5" max="3600" step="0.1" value="10"><input id="durSl" type="range" min="1" max="120" step="0.5" value="10"></div>
-      <div class="prow"><label>Prędkość (poziom)</label><input id="spdn" type="number" min="1" max="22" step="0.1" value="10"><input id="spd2" type="range" min="1" max="22" step="0.1" value="10"></div>
-      <div class="prow"><label>Kroków na obrót</label><input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta"><span class="small" id="spanInfo"></span></div>
-      <details class="small"><summary>Zaawansowane</summary>
-        <div class="prow" style="margin-top:8px"><label>Limit przyspieszenia (rampa %)</label><input id="rampn" type="number" min="0" max="100" step="0.5" value="50"><input id="ramp2" type="range" min="0" max="100" step="0.5" value="50"></div>
-        <div class="small" style="margin:4px 0 8px">Zwykle nie trzeba ruszać: przyspieszenie wynika z kształtu krzywej. To tylko górny limit bezpieczeństwa.</div>
-        <div class="prow"><label>Droga A→B [°] (opcja)</label><input id="span" type="number" min="0" max="3600" step="1" placeholder="—"><span class="small" id="cinfo"></span></div>
-      </details>
-    </div>
 
-    <div class="jogpad" style="height:90px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
-    <div class="row" style="gap:6px">
-      <button data-cmd="HOME" style="padding:8px 10px;min-height:40px;font-size:14px">HOME</button>
-      <button data-cmd="SETA" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw A</button>
-      <button data-cmd="SETB" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw B</button>
-      <button data-cmd="GOA" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do A</button>
-      <button data-cmd="GOB" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do B</button>
-      <span class="small" style="margin-left:auto">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></span>
+      <div class="posbox">
+        <div class="jogpad" style="height:96px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
+        <div class="posbtns">
+          <button class="tile sm t-beige" data-cmd="HOME" data-ico="home">HOME</button>
+          <button class="tile sm t-teal" data-cmd="SETA" data-ico="pinA">Ustaw A</button>
+          <button class="tile sm t-teal" data-cmd="SETB" data-ico="pinB">Ustaw B</button>
+          <button class="tile sm t-orange" data-cmd="GOA" data-ico="goto">Do A</button>
+          <button class="tile sm t-orange" data-cmd="GOB" data-ico="goto">Do B</button>
+        </div>
+        <div class="small">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></div>
+      </div>
     </div>
-    <div class="small">Dotknij pustego miejsca = nowy punkt. Dotknij punktu = uchwyty (kwadraty) do ustawiania ramp. Oś pozioma: czas, pionowa: położenie od A (dół) do B (góra).</div>
+    <div class="small">Dotknij pustego miejsca = nowy punkt. Dotknij punktu = uchwyty (kwadraty) do ustawiania ramp. Kropkę na krzywej możesz przeciągać (poza punktami). Oś pozioma: czas, pionowa: położenie od A (dół) do B (góra).</div>
   </div>
+
+  <dialog id="libDlg">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><b>Zapisane krzywe</b><button id="btnLibClose" data-ico="abort" style="min-height:34px;padding:4px 12px">Zamknij</button></div>
+    <select id="libKind" class="toolsel" style="width:100%;margin-bottom:8px">
+      <option value="ab">Pokaż: A→B</option><option value="aba">Pokaż: A→B→A</option><option value="zig">Pokaż: Zygzak</option><option value="all">Pokaż: wszystkie</option>
+    </select>
+    <div id="libList"></div>
+    <div class="row" style="margin-top:10px;gap:6px">
+      <button id="btnLibSave" class="acc" data-ico="save" style="flex:1">Zapisz bieżącą…</button>
+    </div>
+    <div class="row" style="margin-top:6px;gap:6px">
+      <button id="btnExp" data-ico="upload" style="flex:1">Eksport</button>
+      <button id="btnImp" data-ico="download" style="flex:1">Import</button>
+    </div>
+    <div class="row" style="margin-top:6px;gap:6px">
+      <button id="btnCUp" data-ico="cloudUp" style="flex:1" title="Wyślij zapisane krzywe do chmury">Wyślij do chmury</button>
+      <button id="btnCDn" data-ico="cloudDown" style="flex:1" title="Pobierz krzywe z chmury">Pobierz z chmury</button>
+    </div>
+    <div class="small" style="margin-top:8px">Krzywe są zapisywane osobno dla każdego rodzaju (A→B, A→B→A, Zygzak), więc krzywa wielopunktowa nie trafi do listy pojedynczej. Chmura i eksport przenoszą wszystkie rodzaje.</div>
+    <input id="fileImp" type="file" accept=".json,application/json,text/plain" style="display:none">
+  </dialog>
 </section>
 </main>
 
-<nav>
-  <button id="nav-ctl" class="active">Sterowanie</button>
-  <button id="nav-crv">Krzywa</button>
-</nav>
+
 
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const PAGE_VERSION='19.11 noc, b17';
+const ICONS={
+ play:'<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+ stop:'<rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/>',
+ home:'<path d="M3.5 11.5L12 4l8.5 7.5M6 10v9.5h12V10M10 19.5v-5h4v5"/>',
+ pinA:'<path d="M12 21s-6.5-5.7-6.5-11.2a6.5 6.5 0 0113 0C18.5 15.3 12 21 12 21z"/><text x="12" y="12.7" text-anchor="middle" font-size="8" font-weight="800" fill="currentColor" stroke="none">A</text>',
+ pinB:'<path d="M12 21s-6.5-5.7-6.5-11.2a6.5 6.5 0 0113 0C18.5 15.3 12 21 12 21z"/><text x="12" y="12.7" text-anchor="middle" font-size="8" font-weight="800" fill="currentColor" stroke="none">B</text>',
+ goto:'<path d="M4 12h12M11 6.5l5.5 5.5-5.5 5.5M20 5.5v13"/>',
+ alert:'<path d="M12 3.5l9.2 16H2.8z"/><path d="M12 9.5v4.5M12 17.2v.1"/>',
+ undo:'<path d="M9 14l-5-5 5-5"/><path d="M4 9h9.5a6 6 0 010 12H9"/>',
+ redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9h-9.5a6 6 0 000 12H15"/>',
+ trash:'<path d="M4.5 7h15M9 7V4.5h6V7M6.5 7l.9 12.5h9.2L17.5 7M10 11v5M14 11v5"/>',
+ expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+ shrink:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
+ smooth:'<path d="M3 17c5 0 4-10 9-10s4 10 9 10"/>',
+ reset:'<path d="M4 12a8 8 0 108-8M4 4v5h5"/>',
+ save:'<path d="M5 4.5h11l3.5 3.5V19.5H5zM8.5 4.5V9h7V4.5M8.5 19.5V14h7v5.5"/>',
+ folder:'<path d="M3 7.5A2 2 0 015 5.5h4l2 2.2h8a2 2 0 012 2V17.5a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
+ cloudUp:'<path d="M7 18.5a4.2 4.2 0 01-.6-8.3 5.6 5.6 0 0110.7-1.2 4.6 4.6 0 01-.4 9.5"/><path d="M12 19.5v-7M9 15.2l3-3 3 3"/>',
+ cloudDown:'<path d="M7 18.5a4.2 4.2 0 01-.6-8.3 5.6 5.6 0 0110.7-1.2 4.6 4.6 0 01-.4 9.5"/><path d="M12 12.5v7M9 16.8l3 3 3-3"/>',
+ send:'<path d="M3.5 11L20.5 3.5 13 20.5l-2.3-7.2z"/>',
+ abort:'<circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/>',
+ music:'<path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
+ bluetooth:'<path d="M7 7.5l10 9-5 4.5V3l5 4.5-10 9"/>',
+ palette:'<path d="M12 3.5a8.5 8.5 0 100 17c1.6 0 2.2-1.1 1.6-2.2-.6-1.2 0-2.3 1.4-2.3h2.2a3.7 3.7 0 003.7-3.7c0-4.8-4-8.8-8.9-8.8z"/><circle cx="7.5" cy="11.5" r="1" fill="currentColor"/><circle cx="10" cy="7.8" r="1" fill="currentColor"/><circle cx="14.8" cy="7.8" r="1" fill="currentColor"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+ list:'<path d="M5 6h14M5 12h14M5 18h9"/>',
+ sliders:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+ move:'<path d="M3.5 12h17M7.5 8l-4 4 4 4M16.5 8l4 4-4 4"/>',
+ upload:'<path d="M12 16V4M7.5 8.5L12 4l4.5 4.5M5 16v3.5h14V16"/>',
+ download:'<path d="M12 4v12M7.5 11.5L12 16l4.5-4.5M5 16v3.5h14V16"/>',
+ pin:'<path d="M12 21s-6.5-5.7-6.5-11.2a6.5 6.5 0 0113 0C18.5 15.3 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/>'
+};
+const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
+function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
+const PAGE_VERSION='20.11, b22 (Retro)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -331,7 +463,7 @@ function log(m){
 function renderStatus(){
   const m=S.mode==='sim'?'symulacja':(S.connected?'Bluetooth':'rozłączony');
   $('#status').innerHTML='Tryb: <b>'+m+'</b> · stan: <b>'+S.state+'</b>';
-  $('#btnConn').textContent=S.mode==='ble'&&S.connected?'Rozłącz':(S.mode==='sim'?'Połącz':'Połącz');
+  $('#btnConn').innerHTML=ico('bluetooth')+(S.mode==='ble'&&S.connected?'Rozłącz':'Połącz');
   $('#posfill').style.width=(clamp(S.pos,0,1)*100)+'%';
   $('#postxt').textContent=Math.round(S.pos*100)+' %'; $('#postxt2').textContent=Math.round(S.pos*100)+' %';
 }
@@ -603,10 +735,16 @@ function draw(){
   cx.fillStyle=K('--dim'); cx.textAlign='left'; cx.fillText('B',px(0)+4,py(1)+12); cx.fillText('A',px(0)+4,py(0)-5);
   // krzywa
   const P=S.pts;
-  cx.strokeStyle=(S.feas&&!S.feas.ok)?K('--bad'):K('--acc'); cx.lineWidth=3; cx.lineJoin='round'; cx.beginPath();
-  for(let i=0;i<=400;i++){const t=i/400, y=yAt(P,t); i?cx.lineTo(px(t),py(y)):cx.moveTo(px(t),py(y));}
-  cx.stroke();
-  if(S.feas){ cx.save(); cx.font='12px -apple-system,system-ui,sans-serif'; cx.textAlign='right'; cx.fillStyle=S.feas.ok?K('--ok'):K('--bad'); cx.fillText((S.feas.ok?'najkrótszy czas: ':'ZA SZYBKO, min. ')+(Math.round(S.feas.tmin*10)/10)+' s',px(1)-6,py(1)+14); cx.restore(); }
+  { const N=300, ys=[]; for(let i=0;i<=N;i++) ys.push(yAt(P,i/N));
+    const f=S.feas, D=f&&f.D?f.D:0, T=S.dur, dt=T/N, c=f?f.c:null, vcap=c?c.vcap/MV:0, aLim=c?c.aMax/MA:0;
+    const bad=new Array(N+1).fill(false);   // które odcinki są za szybkie (prędkość) lub mają za duże przyspieszenie (rampa)
+    if(D>0&&c){ const v=[]; for(let i=0;i<N;i++) v.push((ys[i+1]-ys[i])/dt*D);
+      for(let i=0;i<N;i++){ let b=Math.abs(v[i])>vcap*1.001; if(i>0&&Math.abs(v[i]-v[i-1])/dt>aLim*1.001) b=true; if(i<N-1&&Math.abs(v[i+1]-v[i])/dt>aLim*1.001) b=true; bad[i]=b; bad[i+1]=bad[i+1]||b; } }
+    cx.lineWidth=3.5; cx.lineJoin='round'; cx.lineCap='round';
+    let i=0; while(i<N){ const col=D>0?(bad[i]?K('--bad'):K('--ok')):K('--acc'); let j=i; while(j<N&&(D>0?bad[j]===bad[i]:true)) j++;
+      cx.strokeStyle=col; cx.beginPath(); cx.moveTo(px(i/N),py(ys[i])); for(let k=i+1;k<=j;k++) cx.lineTo(px(k/N),py(ys[k])); cx.stroke(); i=j; }
+    S.badFrac=bad.filter(Boolean).length/(N+1); }
+  if(S.feas&&S.feas.D>0){ cx.save(); cx.font='12px -apple-system,system-ui,sans-serif'; cx.textAlign='right'; cx.fillStyle=S.feas.ok?K('--ok'):K('--bad'); cx.fillText((S.feas.ok?'najkrótszy czas: ':'ZA SZYBKO, min. ')+(Math.round(S.feas.tmin*10)/10)+' s',px(1)-6,py(1)+14); cx.restore(); }
   // uchwyty wybranego punktu
   const s=S.sel;
   if(s>=0&&s<P.length){
@@ -712,7 +850,7 @@ $('#btnMirror').addEventListener('click',e=>{S.mirror=!S.mirror;e.target.classLi
 /* presety pamiętają Twoje zmiany: edycje są zapisywane osobno dla A→B, A→B→A i Zygzaka */
 let presetStore=store('kawalet.presets')||{};
 S.curPreset=store('kawalet.curPreset')||(store('kawalet.last')?null:'ab');
-function markPreset(){document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('on',b.dataset.preset===S.curPreset))}
+function markPreset(){document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('on',b.dataset.preset===S.curPreset)); const ps=$('#presetSel'); if(ps) ps.value=S.curPreset||''}
 function savePresetState(){ if(S.curPreset){ presetStore[S.curPreset]={pts:JSON.parse(JSON.stringify(S.pts)),dur:S.dur}; store('kawalet.presets',presetStore); } store('kawalet.curPreset',S.curPreset); }
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
   const name=b.dataset.preset; if(name===S.curPreset) return;
@@ -721,6 +859,7 @@ document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click'
   if(st&&validCurve(st)){S.pts=JSON.parse(JSON.stringify(st.pts));S.dur=clamp(+st.dur||S.dur,1,3600);$('#dur').value=S.dur} else S.pts=presetPts(name);
   S.sel=1;clampAll();markPreset();draw();persist();scrubUpdate(false);
 }));
+$('#presetSel').addEventListener('change',e=>{ const v=e.target.value; if(!v){ markPreset(); return; } const b=document.querySelector('[data-preset="'+v+'"]'); if(b) b.click(); });
 $('#btnReset').addEventListener('click',()=>{
   const name=S.curPreset||'ab';
   const label={ab:'A→B',aba:'A→B→A',zig:'Zygzak'}[name];
@@ -729,7 +868,7 @@ $('#btnReset').addEventListener('click',()=>{
   S.pts=presetPts(name); S.sel=1; clampAll(); markPreset(); draw(); persist(); scrubUpdate(false);
 });
 /* ---- obroty / czas / prędkość są powiązane: wybierasz, co ma się wyliczać, pozostałe dwa ustawiasz ---- */
-S.calc='spd'; S.cspd=10; S.cramp=50;
+S.cspd=10; S.cramp=50; S.lock={revs:false,time:false,spd:false}; S.last='revs'; S.adapt=null;   // blokady pól; S.last = ostatnio ustawiane pole (dopasowuje się inne, niezablokowane)
 function curveNorm(){   // znormalizowany (czas 1) szczyt prędkości i przyspieszenia krzywej, jako ułamek drogi
   const N=300, ys=[]; for(let i=0;i<=N;i++) ys.push(yAt(S.pts,i/N));
   const dt=1/N, v=[]; let vn=0, an=0;
@@ -741,29 +880,36 @@ function ccap(){ const vmax=2000+1000*S.cspd, vcap=Math.min(vmax,24000), acc=500
 const MV=1.1, MA=1.2;   // zapasy: prędkość 10 %, przyspieszenie 20 %
 function solveCalc(){
   recomputeSpan(); const spr=S.spr||0; let D=S.spanSteps||0; const n=curveNorm(); let over=false;
-  if(S.calc==='revs'&&!S.relMode) S.calc='spd';
-  if(n.vn>1e-6){
-    if(S.calc==='time'){
-      if(D>0){ const c=ccap(); let T=Math.max(MV*n.vn*D/c.vcap, Math.sqrt(MA*n.an*D/c.aMax)); S.dur=Math.min(3600,Math.max(0.5,Math.ceil(T*10)/10)); }
-    } else if(S.calc==='spd'){
+  const abFixed=!S.relMode&&!!S.abSteps;   // w trybie A→B obroty wynikają z A i B
+  const lk={revs:S.lock.revs||abFixed,time:S.lock.time,spd:S.lock.spd};
+  const cand=['revs','time','spd'].filter(f=>!lk[f]&&f!==S.last);   // pola, które mogą się dopasować
+  let adapt=null; if(cand.length===1) adapt=cand[0]; else if(cand.length>=2) adapt=cand.includes('spd')?'spd':cand[0];
+  S.adapt=adapt;
+  if(n.vn>1e-6&&adapt){
+    if(adapt==='time'){
+      if(D>0){ const c=ccap(); const T=Math.max(MV*n.vn*D/c.vcap, Math.sqrt(MA*n.an*D/c.aMax)); S.dur=Math.min(3600,Math.max(0.5,Math.ceil(T*10)/10)); }
+    } else if(adapt==='spd'){
       if(D>0&&S.dur>0){ const acc=500+70*S.cramp, T=S.dur; const vN=Math.max(MV*n.vn*D/T, Math.sqrt(2*acc*MA*n.an*D/(T*T)), 3000); let lv=Math.max(1,Math.ceil((vN-2000)/100)/10); if(lv>22){lv=22;over=true} S.cspd=lv; }
-    } else if(S.calc==='revs'){
+    } else if(adapt==='revs'){
       if(spr>0){ const c=ccap(); const Dm=Math.min(c.vcap*S.dur/(MV*n.vn), c.aMax*S.dur*S.dur/(MA*n.an)); S.revs=Math.max(0,Math.floor(Dm/spr*100)/100); recomputeSpan(); D=S.spanSteps||0; }
     }
   }
-  const c=ccap(); let tmin=0, vReq=0, aReq=0;
-  if(D>0&&n.vn>1e-6){ tmin=Math.max(MV*n.vn*D/c.vcap, Math.sqrt(MA*n.an*D/c.aMax)); vReq=n.vn*D/S.dur; aReq=n.an*D/(S.dur*S.dur); }
-  S.feas={D,c,n,tmin,vReq,aReq,over,ok:D>0&&!over&&S.dur>=tmin-0.06};
+  const c=ccap(); let tmin=0, vReq=0, aReq=0, minLvl=null, maxRevs=null;
+  if(D>0&&n.vn>1e-6){
+    tmin=Math.max(MV*n.vn*D/c.vcap, Math.sqrt(MA*n.an*D/c.aMax)); vReq=n.vn*D/S.dur; aReq=n.an*D/(S.dur*S.dur);
+    const acc=500+70*S.cramp, T=S.dur, vN=Math.max(MV*n.vn*D/T, Math.sqrt(2*acc*MA*n.an*D/(T*T)), 3000); minLvl=Math.max(1,Math.ceil((vN-2000)/100)/10);   // najmniejszy poziom prędkości dla tych obrotów i czasu
+  }
+  if(spr>0&&n.vn>1e-6) maxRevs=Math.floor(Math.min(c.vcap*S.dur/(MV*n.vn), c.aMax*S.dur*S.dur/(MA*n.an))/spr*100)/100;   // największa droga w obrotach dla tego czasu i prędkości
+  S.feas={D,c,n,tmin,vReq,aReq,over,minLvl,maxRevs,ok:D>0&&!over&&S.dur>=tmin-0.06};
 }
-function saveCParams(){ store('kawalet.cparams',{cspd:S.cspd,cramp:S.cramp,calc:S.calc}); }
+function saveCParams(){ store('kawalet.cparams',{cspd:S.cspd,cramp:S.cramp,lock:S.lock,last:S.last}); }
 function renderCalc(){
   const set=(id,v)=>{ const e=$(id); if(e&&document.activeElement!==e) e.value=v; };
   set('#dur',S.dur); set('#durSl',Math.min(120,S.dur)); set('#spdn',S.cspd); set('#spd2',S.cspd); set('#rampn',S.cramp); set('#ramp2',S.cramp);
   const rv=S.relMode?S.revs:(S.abSteps&&S.spr?Math.round(S.abSteps/S.spr*100)/100:S.revs); set('#revs',rv||''); set('#revsSl',Math.min(20,rv||0.05));
-  const lock={spd:S.calc==='spd',time:S.calc==='time',revs:S.calc==='revs'||(!S.relMode&&!!S.abSteps)};
-  ['#spdn','#spd2'].forEach(i=>{$(i).disabled=lock.spd}); ['#dur','#durSl'].forEach(i=>{$(i).disabled=lock.time}); ['#revs','#revsSl'].forEach(i=>{$(i).disabled=lock.revs});
   $('#revsSl').style.display=S.relMode?'':'none';
-  document.querySelectorAll('.calcb').forEach(b=>{ b.classList.toggle('on',b.dataset.calc===S.calc); if(b.dataset.calc==='revs') b.disabled=!S.relMode; });
+  document.querySelectorAll('.lockb').forEach(b=>{ const k=b.dataset.lock, on=S.lock[k]; b.textContent=on?'🔒':'🔓'; b.classList.toggle('on',on); });
+  [['revs','#revs'],['time','#dur'],['spd','#spdn']].forEach(([k,id])=>$(id).classList.toggle('auto',S.adapt===k));   // pole, które się teraz samo dopasowuje
 }
 function updateFeas(){
   const el=$('#feas'); if(!el) return; const dur0=S.dur, spd0=S.cspd;
@@ -774,16 +920,17 @@ function updateFeas(){
     const fmt=n=>(Math.round(n*10)/10), spr=S.spr||0;
     html=(f.ok?'<b style="color:var(--ok)">✔ Wykonalne.</b> ':'<b style="color:var(--bad)">⚠ Za szybko — stół nie nadąży.</b> ')
       +'Szczyt prędkości: <b>'+Math.round(f.vReq).toLocaleString('pl')+' kr/s</b>'+(spr?' = '+fmt(f.vReq/spr*60)+' obr/min stołu':'')+', poziom <b>'+S.cspd+'</b> (limit '+Math.round(f.c.vcap).toLocaleString('pl')+' kr/s).'
-      +'<br>Przyspieszenie: '+Math.round(100*f.aReq*MA/f.c.aMax)+'% limitu. Czas <b>'+S.dur+' s</b>, najkrótszy możliwy przy tym poziomie: '+fmt(f.tmin)+' s.'
+      +'<br>Przyspieszenie: '+Math.round(100*f.aReq*MA/f.c.aMax)+'% limitu. Czas <b>'+S.dur+' s</b>.'
+      +'<br><span style="opacity:.85">Granice: najkrótszy czas <b>'+fmt(f.tmin)+' s</b> · najmniejsza prędkość <b>'+(f.minLvl>22?'>22':f.minLvl)+'</b>'+(f.maxRevs!==null?' · największa droga <b>'+f.maxRevs+' obr.</b>':'')+'</span>'
       +(f.ok?'':'<br>'+(f.over?'Nawet poziom 22 nie wystarcza. ':'')+'<button id="btnFit" style="padding:4px 10px;min-height:32px;font-size:13px">Ustaw najkrótszy czas ('+fmt(f.tmin)+' s)</button>');
   }
   if(html!==S._feasHtml){ S._feasHtml=html; el.innerHTML=html; }   // nie przebudowuj ramki, gdy nic się nie zmieniło (inaczej przycisk znikał między dotknięciem a puszczeniem)
 }
 $('#feas').addEventListener('click',e=>{
-  if(e.target.id==='btnFit'){ S.calc='time'; saveCParams(); draw(); scrubUpdate(false); }
+  if(e.target.id==='btnFit'){ S.dur=Math.min(3600,Math.max(0.5,Math.ceil(S.feas.tmin*10)/10)); S.last='time'; persist(); saveCParams(); draw(); scrubUpdate(false); }
 });
-document.querySelectorAll('.calcb').forEach(b=>b.addEventListener('click',()=>{ if(b.disabled) return; S.calc=b.dataset.calc; saveCParams(); draw(); }));
-['#spdn','#spd2'].forEach(i=>$(i).addEventListener('input',e=>{ if(e.target.value!==''){ S.cspd=Math.round(clamp(+e.target.value,1,22)*10)/10; saveCParams(); draw(); } }));
+document.querySelectorAll('.lockb').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.lock; S.lock[k]=!S.lock[k]; saveCParams(); draw(); }));
+['#spdn','#spd2'].forEach(i=>$(i).addEventListener('input',e=>{ if(e.target.value!==''){ S.cspd=Math.round(clamp(+e.target.value,1,22)*10)/10; S.last='spd'; saveCParams(); draw(); } }));
 ['#rampn','#ramp2'].forEach(i=>$(i).addEventListener('input',e=>{ if(e.target.value!==''){ S.cramp=Math.round(clamp(+e.target.value,0,100)*2)/2; saveCParams(); draw(); } }));
 /* ---- droga w obrotach: między A i B albo od bieżącej pozycji o N obrotów ---- */
 S.relMode=false; S.relDir=1; S.revs=2; S.spr=0; S.abSteps=0;
@@ -793,7 +940,7 @@ function recomputeSpan(){
 }
 function updateSpanUI(){
   recomputeSpan();
-  $('#modeAB').classList.toggle('on',!S.relMode); $('#modeRel').classList.toggle('on',S.relMode);
+  $('#modeAB').classList.toggle('on',!S.relMode); $('#modeRel').classList.toggle('on',S.relMode); $('#modeSel').value=S.relMode?'rel':'ab';
   $('#dirBtn').style.display=S.relMode?'':'none'; $('#dirBtn').textContent=S.relDir>0?'→':'←';
   const rv=S.relMode?S.revs:(S.abSteps&&S.spr?Math.round(S.abSteps/S.spr*100)/100:S.revs);
   if(document.activeElement!==$('#revs')) $('#revs').value=rv||'';
@@ -803,13 +950,27 @@ function updateSpanUI(){
   const g=$('#scrubGo'); if(g){ g.disabled=S.relMode; if(S.relMode) g.checked=false; }
   store('kawalet.rel',{rel:S.relMode,revs:S.revs,dir:S.relDir,spr:S.spr});
 }
+$('#modeSel').addEventListener('change',e=>{ (e.target.value==='rel'?$('#modeRel'):$('#modeAB')).click(); });
 $('#modeAB').addEventListener('click',()=>{S.relMode=false;updateSpanUI();draw()});
 $('#modeRel').addEventListener('click',()=>{S.relMode=true;updateSpanUI();draw()});
 $('#dirBtn').addEventListener('click',()=>{S.relDir=-S.relDir;updateSpanUI();draw()});
-$('#revsSl').addEventListener('input',e=>{ S.revs=+e.target.value; updateSpanUI(); draw(); });
-$('#revs').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0){ if(S.relMode) S.revs=v; else { S.abSteps=0; S.revs=v; } updateSpanUI(); draw(); } });
+$('#revsSl').addEventListener('input',e=>{ S.revs=+e.target.value; S.last='revs'; updateSpanUI(); draw(); });
+$('#revs').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0){ S.last='revs'; if(S.relMode) S.revs=v; else { S.abSteps=0; S.revs=v; } updateSpanUI(); draw(); } });
 $('#spr').addEventListener('input',e=>{ S.spr=Math.max(0,Math.round(+e.target.value||0)); updateSpanUI(); draw(); });
-$('#durSl').addEventListener('input',e=>{ S.dur=+e.target.value; persist(); draw(); scrubUpdate(false); });
+$('#durSl').addEventListener('input',e=>{ S.dur=+e.target.value; S.last='time'; persist(); draw(); scrubUpdate(false); });
+/* ---- kropkę na krzywej można przeciągać (poza punktami kontrolnymi); suwak pod wykresem jest wyrównany do pola wykresu ---- */
+let scrubDrag=false;
+function scrubFromEvent(e){ const r=cv.getBoundingClientRect(); const t=clamp(ux(e.clientX-r.left),0,1); $('#scrub').value=Math.round(t*1000)/10; scrubUpdate(true); }
+cv.addEventListener('pointerdown',e=>{
+  const r=cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, P=S.pts;
+  if(P.some(p=>Math.hypot(x-px(p.t),y-py(p.y))<16)) return;   // punkty kontrolne mają pierwszeństwo
+  const hx=px(S.scrub||0), hy=py(yAt(P,S.scrub||0));
+  if(Math.hypot(x-hx,y-hy)<=24){ scrubDrag=true; cv.setPointerCapture(e.pointerId); e.stopImmediatePropagation(); e.preventDefault(); scrubFromEvent(e); }
+},true);
+cv.addEventListener('pointermove',e=>{ if(scrubDrag){ e.stopImmediatePropagation(); scrubFromEvent(e); } },true);
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,e=>{ if(scrubDrag){ scrubDrag=false; e.stopImmediatePropagation(); scrubUpdate('final'); } },true));
+function alignScrub(){ const w=$('#scrubWrap'); if(w) w.style.padding='0 '+PAD.r+'px 0 '+PAD.l+'px'; }
+alignScrub();
 /* ---- suwak czasu (podgląd i jazda stołu) ---- */
 let scrubLast=0;
 function scrubUpdate(send){
@@ -823,11 +984,11 @@ function scrubUpdate(send){
 $('#scrub').addEventListener('input',()=>scrubUpdate(true));
 $('#scrub').addEventListener('change',()=>scrubUpdate('final'));
 $('#span').addEventListener('change',e=>{S.span=clamp(+e.target.value||0,0,3600);e.target.value=S.span||'';store('kawalet.span',S.span);draw()});
-$('#dur').addEventListener('input',e=>{const v=+e.target.value; if(v>=0.5){S.dur=Math.min(v,3600);persist();draw();scrubUpdate(false)}});
-$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,0.5,3600);persist();draw();scrubUpdate(false)});
+$('#dur').addEventListener('input',e=>{const v=+e.target.value; if(v>=0.5){S.dur=Math.min(v,3600);S.last='time';persist();draw();scrubUpdate(false)}});
+$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,0.5,3600);S.last='time';persist();draw();scrubUpdate(false)});
 $('#btnFs').addEventListener('click',()=>{
   const ed=$('#editor'); ed.classList.toggle('fs');
-  $('#btnFs').textContent=ed.classList.contains('fs')?'Zamknij pełny ekran':'Pełny ekran';
+  $('#btnFs').innerHTML=ico(ed.classList.contains('fs')?'shrink':'expand'); $('#btnFs').title=ed.classList.contains('fs')?'Zamknij pełny ekran':'Pełny ekran';
   setTimeout(()=>{resize();draw()},50);
 });
 
@@ -861,18 +1022,38 @@ $('#btnAbort').addEventListener('click',()=>{sendLine('CURVE ABORT');sendLine('S
 /* ---- zapisane krzywe ---- */
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 function persist(){store('kawalet.last',{pts:S.pts,dur:S.dur}); if(typeof savePresetState==='function') savePresetState()}
-function refreshList(){
-  const sel=$('#selLoad'), saved=store('kawalet.saved')||{};
-  sel.innerHTML='<option value="">Wczytaj…</option>'+Object.keys(saved).map(n=>'<option>'+n.replace(/</g,'&lt;')+'</option>').join('');
+const KINDS={ab:'A→B',aba:'A→B→A',zig:'Zygzak'};
+const guessKind=pts=>pts.length<=2?'ab':(pts.length===3?'aba':'zig');
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function curKind(){ return S.curPreset||guessKind(S.pts); }
+function getSaved(){   // zapisane krzywe: klucz "rodzaj|nazwa"; stare zapisy (sama nazwa) są przenoszone do właściwego rodzaju
+  const raw=store('kawalet.saved')||{}, out={}; let ch=false;
+  for(const k of Object.keys(raw)){ const v=raw[k]; if(!v||!v.pts) continue;
+    if(v.kind&&k.indexOf('|')>0) out[k]=v; else { const kind=v.kind||guessKind(v.pts); out[kind+'|'+k]={name:k,kind,pts:v.pts,dur:v.dur}; ch=true; } }
+  if(ch) store('kawalet.saved',out); return out;
 }
-$('#btnSave').addEventListener('click',()=>{
-  const n=prompt('Nazwa krzywej:'); if(!n) return;
-  const saved=store('kawalet.saved')||{}; saved[n]={pts:S.pts,dur:S.dur}; store('kawalet.saved',saved); refreshList();
-});
-$('#selLoad').addEventListener('change',e=>{
-  const saved=store('kawalet.saved')||{}, s=saved[e.target.value];
-  if(s){histPush(snap(),true);S.curPreset=null;markPreset();S.pts=JSON.parse(JSON.stringify(s.pts));S.dur=s.dur;$('#dur').value=S.dur;S.sel=1;draw()}
-  e.target.value='';
+function putSaved(kind,name,obj){ const sv=getSaved(); sv[kind+'|'+name]={name,kind,pts:JSON.parse(JSON.stringify(obj.pts)),dur:obj.dur}; store('kawalet.saved',sv); }
+function refreshList(){ if($('#libDlg').open) renderLib(); }
+function renderLib(){
+  const sv=getSaved(), want=$('#libKind').value||curKind();
+  const keys=Object.keys(sv).filter(k=>want==='all'||sv[k].kind===want).sort((a,b)=>sv[a].name.localeCompare(sv[b].name,'pl'));
+  $('#libList').innerHTML=keys.length?keys.map(k=>'<div class="librow" data-k="'+esc(k)+'"><span class="libname">'+esc(sv[k].name)+(want==='all'?' <small>('+KINDS[sv[k].kind]+')</small>':'')+'</span><button data-act="load">Wczytaj</button><button data-act="ren">Nazwa</button><button data-act="del">Usuń</button></div>').join(''):'<div class="small" style="padding:8px 0">Brak zapisanych krzywych tego rodzaju.</div>';
+}
+function saveCurrent(){
+  const kind=curKind(), n=(prompt('Nazwa krzywej ('+KINDS[kind]+'):')||'').trim(); if(!n) return;
+  const sv=getSaved(); if(sv[kind+'|'+n]&&!confirm('Krzywa „'+n+'" ('+KINDS[kind]+') już istnieje. Zastąpić?')) return;
+  putSaved(kind,n,{pts:S.pts,dur:S.dur}); log('Zapisano krzywą „'+n+'" ('+KINDS[kind]+')'); refreshList();
+}
+$('#btnSave').addEventListener('click',saveCurrent);
+$('#btnLibSave').addEventListener('click',saveCurrent);
+$('#btnLib').addEventListener('click',()=>{ $('#libKind').value=curKind(); renderLib(); try{$('#libDlg').showModal()}catch(e){$('#libDlg').setAttribute('open','')} });
+$('#btnLibClose').addEventListener('click',()=>{ try{$('#libDlg').close()}catch(e){$('#libDlg').removeAttribute('open')} });
+$('#libKind').addEventListener('change',renderLib);
+$('#libList').addEventListener('click',e=>{
+  const act=e.target.dataset&&e.target.dataset.act; if(!act) return; const k=e.target.closest('.librow').dataset.k, sv=getSaved(), c=sv[k]; if(!c) return;
+  if(act==='load'){ histPush(snap(),true); S.curPreset=c.kind; S.pts=JSON.parse(JSON.stringify(c.pts)); S.dur=clamp(+c.dur||10,0.5,3600); S.last='time'; S.sel=1; clampAll(); markPreset(); persist(); draw(); scrubUpdate(false); log('Wczytano „'+c.name+'" ('+KINDS[c.kind]+')'); try{$('#libDlg').close()}catch(err){$('#libDlg').removeAttribute('open')} }
+  else if(act==='ren'){ const n=(prompt('Nowa nazwa:',c.name)||'').trim(); if(!n||n===c.name) return; const nk=c.kind+'|'+n; if(sv[nk]&&!confirm('Krzywa „'+n+'" już istnieje. Zastąpić?')) return; delete sv[k]; sv[nk]=Object.assign({},c,{name:n}); store('kawalet.saved',sv); renderLib(); }
+  else if(act==='del'){ if(!confirm('Usunąć krzywą „'+c.name+'" ('+KINDS[c.kind]+')?')) return; delete sv[k]; store('kawalet.saved',sv); renderLib(); }
 });
 
 /* ========================= EKSPORT / IMPORT / LINK ========================= */
@@ -891,28 +1072,30 @@ function decodeHash(){
   try{let b=m[1].replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4)b+='='; return JSON.parse(decodeURIComponent(escape(atob(b))))}catch(e){return null}
 }
 $('#btnExp').addEventListener('click',async()=>{
-  const bundle={app:'kawalet',v:1,curves:Object.assign({},store('kawalet.saved')||{},{'(bieżąca)':curveObj()})};
+  const bundle={app:'kawalet',v:2,curves:getSaved()};
   const txt=JSON.stringify(bundle,null,1), file=new File([txt],'kawalet-krzywe.json',{type:'application/json'});
   try{ if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Krzywe Kawalet'});log('Eksport: wysłano arkusz udostępniania');return} }catch(e){ if(e&&e.name==='AbortError')return }
   const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='kawalet-krzywe.json'; document.body.appendChild(a); a.click(); a.remove(); log('Eksport: pobrano kawalet-krzywe.json');
 });
+function mergeBundle(cur){   // dokłada krzywe z pliku/chmury do zapisanych, zachowując rodzaj
+  const sv=getSaved(); let n=0, last=null;
+  for(const k of Object.keys(cur)){ const v=cur[k]; if(!validCurve(v)) continue;
+    if(k==='(bieżąca)'){ last=v; continue; }
+    let kind=v.kind, name=v.name||k; const i=k.indexOf('|'); if(i>0){ kind=kind||k.slice(0,i); name=v.name||k.slice(i+1); }
+    if(!KINDS[kind]) kind=guessKind(v.pts); sv[kind+'|'+name]={name,kind,pts:v.pts,dur:v.dur}; n++; }
+  store('kawalet.saved',sv); return {n,last};
+}
 $('#btnImp').addEventListener('click',()=>$('#fileImp').click());
 $('#fileImp').addEventListener('change',async e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f) return;
   try{
-    const o=JSON.parse(await f.text()), cur=o.curves||{}; let n=0, last=null;
+    const o=JSON.parse(await f.text());
     if(o.pts){ if(validCurve(o)){applyCurve(o);log('Import: wczytano krzywą z pliku');return} }
-    const saved=store('kawalet.saved')||{};
-    for(const k of Object.keys(cur)){ if(validCurve(cur[k])){ if(k==='(bieżąca)'){last=cur[k]} else {saved[k]={pts:cur[k].pts,dur:cur[k].dur};n++} } }
-    store('kawalet.saved',saved); refreshList();
-    if(last) applyCurve(last);
-    if(!n&&!last) throw 0;
-    log('Import: zapisanych krzywych '+n+(last?', bieżąca wczytana':''));
+    const r=mergeBundle(o.curves||{}); refreshList();
+    if(r.last) applyCurve(r.last);
+    if(!r.n&&!r.last) throw 0;
+    log('Import: zapisanych krzywych '+r.n+(r.last?', bieżąca wczytana':''));
   }catch(err){alert('Nie udało się wczytać pliku (to nie jest plik krzywych Kawalet).')}
-});
-$('#btnLnk').addEventListener('click',async()=>{
-  const u=encodeLink();
-  try{await navigator.clipboard.writeText(u);log('Link do krzywej skopiowany – wklej go na drugim urządzeniu w Bluefy/Chrome')}catch(e){prompt('Skopiuj link do krzywej:',u)}
 });
 
 /* ========================= CHMURA (Cloudflare Worker) ========================= */
@@ -931,16 +1114,15 @@ async function cloudFetch(method,body){
 }
 $('#btnCUp').addEventListener('click',async()=>{
   try{
-    const bundle={app:'kawalet',v:1,curves:Object.assign({},store('kawalet.saved')||{},{'(bieżąca)':curveObj()})};
-    if(!confirm('Wysłać do chmury '+Object.keys(bundle.curves).length+' krzywych? (zastąpi to, co jest w chmurze)')) return;
+    const bundle={app:'kawalet',v:2,curves:getSaved()};
+    if(!confirm('Wysłać do chmury '+Object.keys(bundle.curves).length+' zapisanych krzywych (wszystkie rodzaje)? To zastąpi zawartość chmury — krzywe usunięte u Ciebie znikną też z chmury.')) return;
     await cloudFetch('PUT',JSON.stringify(bundle)); log('Chmura: wysłano '+Object.keys(bundle.curves).length+' krzywych');
   }catch(e){ alert('Chmura: '+e.message); }
 });
 $('#btnCDn').addEventListener('click',async()=>{
   try{
-    const o=await (await cloudFetch('GET')).json(), cur=o.curves||{}; const saved=store('kawalet.saved')||{}; let n=0;
-    for(const k of Object.keys(cur)){ if(validCurve(cur[k])){ const name=(k==='(bieżąca)')?'(bieżąca z chmury)':k; saved[name]={pts:cur[k].pts,dur:cur[k].dur}; n++; } }
-    store('kawalet.saved',saved); refreshList(); log('Chmura: pobrano '+n+' krzywych (lista „Wczytaj…")');
+    const o=await (await cloudFetch('GET')).json(), r=mergeBundle(o.curves||{}), n=r.n; if(r.last) putSaved(guessKind(r.last.pts),'(bieżąca z chmury)',r.last);
+    refreshList(); log('Chmura: pobrano '+n+' krzywych (przycisk „Krzywe")');
     if(!n) alert('W chmurze nie ma jeszcze krzywych.');
   }catch(e){ alert('Chmura: '+e.message); }
 });
@@ -960,27 +1142,29 @@ $('#btnMelPlay').addEventListener('click',()=>{
 (function(){ const a=store('kawalet.melAmp'); if(a){ $('#melAmp').value=a; if($('#melAmp').value!==String(a)) $('#melAmp').value='48'; } })();
 
 /* ========================= MOTYWY ========================= */
-const THEMES=[['noc','Szkło'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
+const THEMES=[['retro','Retro'],['noc','Szkło'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
 function setTheme(i){
   i=((i%THEMES.length)+THEMES.length)%THEMES.length; S.theme=i;
-  const k=THEMES[i][0]; if(k==='noc') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',k);
-  store('kawalet.theme',i); drawSoon(); return THEMES[i][1];
+  const k=THEMES[i][0]; document.documentElement.setAttribute('data-theme',k);
+  store('kawalet.theme2',k); try{ const m=document.querySelector('meta[name=theme-color]'); if(m) m.content=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); }catch(e){}
+  drawSoon(); return THEMES[i][1];
 }
 $('#btnTheme').addEventListener('click',()=>{ const n=setTheme((S.theme||0)+1); log('Motyw: '+n); });
 
 /* ========================= START ========================= */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 (function init(){
+  injectIcons();
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
-  { const cp=store('kawalet.cparams'); if(cp){ S.cspd=+cp.cspd||10; S.cramp=cp.cramp===undefined?50:+cp.cramp; S.calc=cp.calc||'spd'; } }
+  { const cp=store('kawalet.cparams'); if(cp){ S.cspd=+cp.cspd||10; S.cramp=cp.cramp===undefined?50:+cp.cramp; if(cp.lock) S.lock=Object.assign({revs:false,time:false,spd:false},cp.lock); if(cp.last) S.last=cp.last; } }
   { const pr=store('kawalet.params'); if(pr){ setSpdUI(+pr.spd||10); setRampUI(pr.ramp===undefined?50:+pr.ramp); } }
   { const r=store('kawalet.rel'); if(r){S.relMode=!!r.rel;S.revs=+r.revs||2;S.relDir=r.dir<0?-1:1;S.spr=+r.spr||0} updateSpanUI(); }
   scrubUpdate(false);
   const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.curPreset=null;S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
   clampAll(); refreshList(); renderStatus(); markPreset();
-  { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
+  { const t=store('kawalet.theme2'); const ix=THEMES.findIndex(x=>x[0]===t); setTheme(ix>=0?ix:0); }
   setTimeout(bleRestoreOnLoad,300);
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
   log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony '+PAGE_VERSION);
