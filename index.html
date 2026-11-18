@@ -77,6 +77,11 @@ input[type=number],select{font:inherit;color:var(--text);background:var(--inset)
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #log{font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim);max-height:160px;overflow:auto;white-space:pre-wrap}
 .small{font-size:12px;color:var(--dim)}
+.params{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.prow{display:grid;grid-template-columns:150px 92px 1fr;gap:8px;align-items:center}
+.prow label{font-size:13px}
+.prow input[type=number]{min-height:38px;padding:6px 8px}
+@media(max-width:480px){.prow{grid-template-columns:110px 84px 1fr}}
 .tool{display:flex;gap:6px;flex-wrap:wrap}
 .tool button{padding:8px 10px;min-height:40px;font-size:14px}
 dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:24px}
@@ -120,7 +125,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
   <div class="card">
     <h2>Prędkość i rampy</h2>
     <label>Prędkość maksymalna: <b id="spdv">10</b> / 22</label>
-    <input id="spd" type="range" min="1" max="22" value="10">
+    <input id="spd" type="range" min="1" max="22" step="0.1" value="10">
     <label>Rampa (łagodność): <b id="rampv">50</b> %</label>
     <input id="ramp" type="range" min="0" max="100" value="50">
   </div>
@@ -128,6 +133,8 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
   <div class="card">
     <h2>Opcje</h2>
     <button id="btnBoot" style="width:100%">Tryb programowania (BOOT)</button>
+    <button id="btnDefaults" style="width:100%;margin-top:8px">Przywróć ustawienia domyślne</button>
+    <div style="font-size:12px;opacity:.7;margin-top:6px">Kasuje zapamiętane: krzywe robocze (A→B, A→B→A, Zygzak), prędkość, rampę, tryb drogi, motyw. Zapisane pod nazwą krzywe i hasło chmury zostają.</div>
     <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
   </div>
 
@@ -159,54 +166,9 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button id="btnCDn" title="Pobierz krzywe z chmury">☁ Pobierz</button>
       <input id="fileImp" type="file" accept=".json,application/json,text/plain" style="display:none">
     </div>
-    <div class="row">
-      <label style="flex:0 0 auto">Czas ruchu [s]</label>
-      <input id="dur" type="number" min="1" max="3600" step="0.5" value="10" style="width:90px">
-      <label style="flex:0 0 auto">Droga A→B [°]</label>
-      <input id="span" type="number" min="0" max="3600" step="1" placeholder="—" style="width:80px">
-      <span class="small" id="cinfo"></span>
-    </div>
     <div id="cwrap"><canvas id="cv"></canvas></div>
-    <div class="row">
-      <label style="flex:0 0 auto;min-width:130px">Prędkość: <b id="spdv2">10</b> / 22</label>
-      <input id="spd2" type="range" min="1" max="22" value="10" style="flex:1;min-width:120px">
-    </div>
-    <div class="row">
-      <label style="flex:0 0 auto;min-width:130px">Rampa: <b id="rampv2">50</b> %</label>
-      <input id="ramp2" type="range" min="0" max="100" value="50" style="flex:1;min-width:120px">
-    </div>
-    <div class="jogpad" style="height:90px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
-    <div class="row" style="gap:6px">
-      <button data-cmd="HOME" style="padding:8px 10px;min-height:40px;font-size:14px">HOME</button>
-      <button data-cmd="SETA" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw A</button>
-      <button data-cmd="SETB" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw B</button>
-      <button data-cmd="GOA" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do A</button>
-      <button data-cmd="GOB" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do B</button>
-      <span class="small" style="margin-left:auto">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></span>
-    </div>
-    <div class="row">
-      <label style="flex:0 0 auto;min-width:130px">Czas: <b id="durv">10</b> s</label>
-      <input id="durSl" type="range" min="1" max="120" step="0.5" value="10" style="flex:1;min-width:120px">
-    </div>
-    <div class="row">
-      <label style="flex:0 0 auto;min-width:130px">Tempo: <b id="tempov">100</b>% → <b id="tdurv">10</b> s</label>
-      <input id="tempo" type="range" min="25" max="400" step="5" value="100" style="flex:1;min-width:120px">
-    </div>
-    <div class="row" style="gap:6px">
-      <button id="modeAB" class="on" style="padding:8px 12px;min-height:40px;font-size:14px">Między A i B</button>
-      <button id="modeRel" style="padding:8px 12px;min-height:40px;font-size:14px">Od teraz o N obrotów</button>
-    </div>
-    <div class="row">
-      <label style="flex:0 0 auto">Droga [obroty]</label>
-      <input id="revs" type="number" min="0" step="0.25" placeholder="np. 2" style="width:90px">
-      <button id="dirBtn" style="padding:8px 14px;min-height:40px;font-size:18px;display:none" title="Kierunek: → w stronę B (jak pad w prawo), ← w stronę A">→</button>
-      <label style="flex:0 0 auto">Kroków na obrót</label>
-      <input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta" style="width:100px">
-    </div>
-    <div class="small" id="spanInfo"></div>
-    <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
     <div class="row" id="scrubRow">
-      <label style="flex:0 0 auto">Czas</label>
+      <label style="flex:0 0 auto">Przesuwanie</label>
       <input id="scrub" type="range" min="0" max="100" step="0.5" value="0" style="flex:1;min-width:120px">
       <b id="scrubv" class="small" style="min-width:150px;text-align:right;color:var(--text)"></b>
     </div>
@@ -215,6 +177,32 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button id="btnSend" class="acc" style="flex:1">Wyślij do Kawaleta</button>
       <button id="btnRun" class="ok" style="flex:1">Start</button>
       <button id="btnAbort" style="flex:1">Przerwij</button>
+    </div>
+    <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
+
+    <div class="params">
+      <div class="prow"><label>Prędkość (poziom)</label><input id="spdn" type="number" min="1" max="22" step="0.1" value="10"><input id="spd2" type="range" min="1" max="22" step="0.1" value="10"></div>
+      <div class="prow"><label>Rampa [%]</label><input id="rampn" type="number" min="0" max="100" step="0.5" value="50"><input id="ramp2" type="range" min="0" max="100" step="0.5" value="50"></div>
+      <div class="prow"><label>Czas [s]</label><input id="dur" type="number" min="0.5" max="3600" step="0.1" value="10"><input id="durSl" type="range" min="1" max="120" step="0.5" value="10"></div>
+      <div class="prow"><label>Tempo: <b id="tempov">100</b>% → <b id="tdurv">10</b> s</label><span></span><input id="tempo" type="range" min="25" max="400" step="5" value="100"></div>
+      <div class="row" style="gap:6px">
+        <button id="modeAB" class="on" style="padding:8px 12px;min-height:40px;font-size:14px">Między A i B</button>
+        <button id="modeRel" style="padding:8px 12px;min-height:40px;font-size:14px">Od teraz o N obrotów</button>
+        <button id="dirBtn" style="padding:8px 14px;min-height:40px;font-size:18px;display:none" title="Kierunek: → w stronę B (jak pad w prawo), ← w stronę A">→</button>
+      </div>
+      <div class="prow"><label>Droga [obroty]</label><input id="revs" type="number" min="0" step="0.01" placeholder="np. 2"><span class="small">Kroków na obrót: <input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta" style="width:90px;min-height:34px;padding:4px"></span></div>
+      <div class="small" id="spanInfo"></div>
+      <div class="prow"><label>Droga A→B [°] (opcja)</label><input id="span" type="number" min="0" max="3600" step="1" placeholder="—"><span class="small" id="cinfo"></span></div>
+    </div>
+
+    <div class="jogpad" style="height:90px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
+    <div class="row" style="gap:6px">
+      <button data-cmd="HOME" style="padding:8px 10px;min-height:40px;font-size:14px">HOME</button>
+      <button data-cmd="SETA" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw A</button>
+      <button data-cmd="SETB" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw B</button>
+      <button data-cmd="GOA" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do A</button>
+      <button data-cmd="GOB" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do B</button>
+      <span class="small" style="margin-left:auto">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></span>
     </div>
     <div class="small">Dotknij pustego miejsca = nowy punkt. Dotknij punktu = uchwyty (kwadraty) do ustawiania ramp. Oś pozioma: czas, pionowa: położenie od A (dół) do B (góra).</div>
   </div>
@@ -358,7 +346,7 @@ async function bleConnect(){
     });
     S.mode='ble'; S.connected=true; S.state='POŁĄCZONY';
     log('Połączono z '+(bleDev.name||'modułem'));
-    sendLine('VER'); sendLine('PING'); setTimeout(()=>sendLine('INFO',true),600); sendLine('SPD '+S.spd); sendLine('RAMP '+S.ramp);
+    sendLine('VER'); sendLine('PING'); setTimeout(()=>sendLine('INFO',true),600); if(store('kawalet.params')){ sendLine('SPD '+S.spd); sendLine('RAMP '+S.ramp); }
     clearInterval(hbTimer); hbTimer=setInterval(()=>{ if(S.mode==='ble'&&S.connected) sendLine('PING',true); },1000);   // sygnał "żyję": Teensy wysyła status tylko, gdy telefon się odzywa
   }catch(e){ log('! blad w kroku "'+step+'": '+errText(e)); }
   renderStatus();
@@ -443,12 +431,18 @@ setInterval(()=>{
 document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>sendLine(b.dataset.cmd)));
 $('#btnStop').addEventListener('click',()=>{sendLine('STOP');sendLine('CURVE ABORT',true)});
 $('#btnEstop').addEventListener('click',()=>{sendLine('ESTOP')});
+$('#btnDefaults').addEventListener('click',()=>{
+  if(!confirm('Przywrócić ustawienia domyślne? Krzywe robocze, prędkość, rampa, tryb drogi i motyw wrócą do początkowych. Zapisane krzywe i hasło chmury zostają.')) return;
+  ['kawalet.last','kawalet.presets','kawalet.curPreset','kawalet.params','kawalet.rel','kawalet.span','kawalet.theme'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
+  location.reload();
+});
 $('#btnBoot').addEventListener('click',()=>{if(confirm('Przełączyć Kawalet w tryb programowania?\nSterowanie przestanie działać do ponownego uruchomienia (wyłącz i włącz zasilanie).'))sendLine('BOOT')});
 $('#btnConn').addEventListener('click',()=>{ if(S.mode==='ble'&&S.connected) bleDisconnect(); else bleConnect(); });
-function setSpdUI(v){S.spd=v;drawSoon();['#spdv','#spdv2'].forEach(i=>$(i).textContent=v);['#spd','#spd2'].forEach(i=>$(i).value=v)}
-function setRampUI(v){S.ramp=v;drawSoon();['#rampv','#rampv2'].forEach(i=>$(i).textContent=v);['#ramp','#ramp2'].forEach(i=>$(i).value=v)}
-['#spd','#spd2'].forEach(i=>{$(i).addEventListener('input',e=>setSpdUI(+e.target.value));$(i).addEventListener('change',()=>sendLine('SPD '+S.spd))});
-['#ramp','#ramp2'].forEach(i=>{$(i).addEventListener('input',e=>setRampUI(+e.target.value));$(i).addEventListener('change',()=>sendLine('RAMP '+S.ramp))});
+function saveParams(){store('kawalet.params',{spd:S.spd,ramp:S.ramp})}
+function setSpdUI(v){v=Math.round(clamp(v,1,22)*10)/10;S.spd=v;saveParams();drawSoon();$('#spdv').textContent=v;['#spd','#spd2','#spdn'].forEach(i=>{if(document.activeElement!==$(i))$(i).value=v})}
+function setRampUI(v){v=Math.round(clamp(v,0,100)*2)/2;S.ramp=v;saveParams();drawSoon();$('#rampv').textContent=v;['#ramp','#ramp2','#rampn'].forEach(i=>{if(document.activeElement!==$(i))$(i).value=v})}
+['#spd','#spd2','#spdn'].forEach(i=>{$(i).addEventListener('input',e=>{if(e.target.value!=='')setSpdUI(+e.target.value)});$(i).addEventListener('change',()=>sendLine('SPD '+S.spd))});
+['#ramp','#ramp2','#rampn'].forEach(i=>{$(i).addEventListener('input',e=>{if(e.target.value!=='')setRampUI(+e.target.value)});$(i).addEventListener('change',()=>sendLine('RAMP '+S.ramp))});
 
 // Pady do przesuwania na żywo (w zakładce Sterowanie i w zakładce Krzywa)
 document.querySelectorAll('.jogpad').forEach(function(pad){
@@ -657,8 +651,8 @@ function curveLimits(){
   return {vm,am};
 }
 function capacity(){
-  const vmax=2000+1000*S.spd, vcap=Math.min(vmax,24000), rl=1+Math.round(S.ramp*14/100), acc=500*rl;
-  return {vmax,vcap,rl,acc,aMax:Math.max(vmax*vmax/(2*acc),3000)};
+  const vmax=2000+1000*S.spd, vcap=Math.min(vmax,24000), acc=500+70*S.ramp;
+  return {vmax,vcap,acc,aMax:Math.max(vmax*vmax/(2*acc),3000)};
 }
 function feasibility(){
   recomputeSpan(); const span=S.spanSteps||0; if(!span) return null;
@@ -666,16 +660,31 @@ function feasibility(){
   const tv=S.dur*vReq/c.vcap, ta=S.dur*Math.sqrt(aReq/c.aMax), tmin=Math.max(tv,ta);
   return {span,c,vReq,aReq,tv,ta,tmin,ok:S.dur>=tmin*1.1, rec:Math.ceil(tmin*1.15*10)/10};
 }
+function neededLevel(f){   // najmniejszy poziom prędkości (co 0,1), przy którym krzywa w ustawionym czasie jest wykonalna (z zapasem)
+  const acc=500+70*S.ramp, vN=Math.max(f.vReq*1.15, Math.sqrt(2*acc*f.aReq*1.2), 3000), lvl=Math.ceil((vN-2000)/100)/10;
+  return lvl>22?null:Math.max(1,lvl);
+}
 function updateFeas(){
   const f=feasibility(), el=$('#feas'); S.feas=f; if(!el) return;
-  if(!f){ el.textContent='Podaj drogę A→B w krokach (albo ustaw A i B przy połączonym Kawalecie), a pokażę najkrótszy możliwy czas.'; el.style.color=''; return; }
-  const fmt=n=>(Math.round(n*10)/10);
-  el.innerHTML=(f.ok?'✔ ':'⚠ ')+'Droga '+f.span.toLocaleString('pl')+' kr, prędkość '+S.spd+' (maks. '+f.c.vcap.toLocaleString('pl')+' kr/s), rampa '+S.ramp+'%.<br>Najkrótszy czas tej krzywej: <b>'+fmt(f.tmin)+' s</b> (ogranicza: '+(f.tv>=f.ta?'prędkość':'rampa/przyspieszenie')+'). Ustawiony czas: <b>'+S.dur+' s</b>'+(f.ok?'.':' — <b style="color:var(--bad)">za krótki</b>, stół nie nadąży. <button id="btnFit" style="padding:4px 10px;min-height:30px;font-size:13px">Dopasuj czas ('+fmt(f.rec)+' s)</button>');
-  el.style.color=f.ok?'':'var(--text)';
-  const b=$('#btnFit'); if(b) b.onclick=()=>{S.dur=f.rec;$('#dur').value=S.dur;persist();draw();scrubUpdate(false)};
+  let html;
+  if(!f){ html='Podaj drogę (obroty i kroki na obrót) albo ustaw A i B przy połączonym Kawalecie — pokażę najkrótszy możliwy czas.'; }
+  else{
+    const fmt=n=>(Math.round(n*10)/10), nl=f.ok?null:neededLevel(f);
+    html=(f.ok?'<b style="color:var(--ok)">✔ Wykonalne.</b> ':'<b style="color:var(--bad)">⚠ Za szybko — stół nie nadąży.</b> ')
+      +'Droga '+f.span.toLocaleString('pl')+' kr, poziom '+S.spd+' (maks. '+f.c.vcap.toLocaleString('pl')+' kr/s), rampa '+S.ramp+'% ('+Math.round(f.c.acc).toLocaleString('pl')+' kr).'
+      +'<br>Najkrótszy czas: <b>'+fmt(f.tmin)+' s</b> (wg prędkości '+fmt(f.tv)+' s, wg rampy '+fmt(f.ta)+' s). Ustawiony: <b>'+S.dur+' s</b>.'
+      +(f.ok?'':'<br><button id="btnFit" style="padding:4px 10px;min-height:32px;font-size:13px">Dopasuj czas ('+fmt(f.rec)+' s)</button> '
+        +(nl?'<button id="btnFitSpd" style="padding:4px 10px;min-height:32px;font-size:13px">Dopasuj prędkość (poziom '+nl+')</button>':'<span>Nawet poziom 22 nie wystarczy — wydłuż czas.</span>'));
+  }
+  if(html!==S._feasHtml){ S._feasHtml=html; el.innerHTML=html; }   // nie przebudowuj ramki, gdy nic się nie zmieniło (inaczej przycisk znikał między dotknięciem a puszczeniem)
 }
+$('#feas').addEventListener('click',e=>{
+  const f=S.feas; if(!f) return; const id=e.target.id;
+  if(id==='btnFit'){ S.dur=f.rec; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); }
+  else if(id==='btnFitSpd'){ const nl=neededLevel(f); if(nl){ setSpdUI(nl); sendLine('SPD '+nl); draw(); } }
+});
 /* ---- tempo przejazdu: ta sama krzywa, inny czas ---- */
-function syncTempo(){ $('#durv').textContent=S.dur; if(document.activeElement!==$('#durSl')) $('#durSl').value=Math.min(120,S.dur); if(S.dur!==S._tempoDur){ S.baseDur=S.dur; S.tempo=100; S._tempoDur=S.dur; $('#tempo').value=100; } $('#tempov').textContent=S.tempo; $('#tdurv').textContent=S.dur; }
+function syncTempo(){ if(document.activeElement!==$('#durSl')) $('#durSl').value=Math.min(120,S.dur); if(S.dur!==S._tempoDur){ S.baseDur=S.dur; S.tempo=100; S._tempoDur=S.dur; $('#tempo').value=100; } $('#tempov').textContent=S.tempo; $('#tdurv').textContent=S.dur; }
 $('#tempo').addEventListener('input',e=>{ S.tempo=+e.target.value; S.dur=clamp(Math.round(S.baseDur*100/S.tempo*10)/10,0.5,3600); S._tempoDur=S.dur; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); });
 /* ---- droga w obrotach: między A i B albo od bieżącej pozycji o N obrotów ---- */
 S.relMode=false; S.relDir=1; S.revs=2; S.spr=0; S.abSteps=0;
@@ -714,7 +723,8 @@ function scrubUpdate(send){
 $('#scrub').addEventListener('input',()=>scrubUpdate(true));
 $('#scrub').addEventListener('change',()=>scrubUpdate('final'));
 $('#span').addEventListener('change',e=>{S.span=clamp(+e.target.value||0,0,3600);e.target.value=S.span||'';store('kawalet.span',S.span);draw()});
-$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,1,3600);e.target.value=S.dur;persist()});
+$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,0.5,3600);e.target.value=S.dur;persist();draw();scrubUpdate(false)});
+$('#dur').addEventListener('input',e=>{const v=+e.target.value; if(v>=0.5){S.dur=Math.min(v,3600);persist();draw();scrubUpdate(false)}});
 $('#btnFs').addEventListener('click',()=>{
   const ed=$('#editor'); ed.classList.toggle('fs');
   $('#btnFs').textContent=ed.classList.contains('fs')?'Zamknij pełny ekran':'Pełny ekran';
@@ -849,6 +859,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
+  { const pr=store('kawalet.params'); if(pr){ setSpdUI(+pr.spd||10); setRampUI(pr.ramp===undefined?50:+pr.ramp); } }
   { const r=store('kawalet.rel'); if(r){S.relMode=!!r.rel;S.revs=+r.revs||2;S.relDir=r.dir<0?-1:1;S.spr=+r.spr||0} updateSpanUI(); }
   scrubUpdate(false);
   const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.curPreset=null;S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
