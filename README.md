@@ -26,3 +26,9 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 ## Aktualizacja opublikowanej strony
 Po zmianie `index.html` wgraj go ponownie do repozytorium na GitHubie (Add file > Upload files, nadpisz `index.html`, Commit). Po ok. minucie zmiana jest pod adresem https://mr302u8.github.io/Kawalet/. Pamiętaj, że Bluefy może trzymać starą wersję w pamięci podręcznej (odśwież stronę).
+
+## Zmiany 18.11.2026 (wieczór)
+- Wygląd „Szkło" (domyślny), cofnij/ponów w krzywej, przycisk BOOT w karcie Opcje.
+- **Eksport / Import / Link:** Eksport zapisuje wszystkie zapisane krzywe + bieżącą do `kawalet-krzywe.json` (na iPhonie arkusz udostępniania). Import wczytuje taki plik. Link kopiuje adres z bieżącą krzywą (po `#c=`); otwarty na innym urządzeniu pyta, czy ją wczytać.
+- **Oś czasu i drogi:** oś pozioma w sekundach, lewa oś drogi w % A→B, prawa w stopniach (jeśli wpiszesz „Droga A→B [°]"; ustawienie zapamiętywane lokalnie); pod wykresem opis wybranego punktu.
+- **Aplikacja / offline:** `manifest.json`, `sw.js`, `icon.svg` (na GitHub razem z `index.html`). Chrome na Macu: menu → „Zapisz i udostępnij → Zainstaluj stronę jako aplikację". Na iPhonie skrót ze Safari nie obsługuje Bluetooth — używać zakładki w Bluefy.

@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Kawalet</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#17191d">
+<meta name="apple-mobile-web-app-title" content="Kawalet">
 <style>
 :root{
   --bg:#17191d; --panel:rgba(255,255,255,.07); --line:rgba(255,255,255,.13); --text:#f1f3f6; --dim:#9aa1ad;
@@ -147,10 +151,16 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button data-preset="zig">Zygzak</button>
       <button id="btnSave">Zapisz…</button>
       <select id="selLoad" style="width:auto;min-height:40px;padding:6px"><option value="">Wczytaj…</option></select>
+      <button id="btnExp">Eksport</button>
+      <button id="btnImp">Import</button>
+      <button id="btnLnk">Link</button>
+      <input id="fileImp" type="file" accept=".json,application/json,text/plain" style="display:none">
     </div>
     <div class="row">
       <label style="flex:0 0 auto">Czas ruchu [s]</label>
       <input id="dur" type="number" min="1" max="3600" step="0.5" value="10" style="width:90px">
+      <label style="flex:0 0 auto">Droga A→B [°]</label>
+      <input id="span" type="number" min="0" max="3600" step="1" placeholder="—" style="width:80px">
       <span class="small" id="cinfo"></span>
     </div>
     <div id="cwrap"><canvas id="cv"></canvas></div>
@@ -453,8 +463,9 @@ function draw(){
     cx.beginPath(); cx.moveTo(x,py(0)); cx.lineTo(x,py(1)); cx.stroke();
     cx.beginPath(); cx.moveTo(px(0),y); cx.lineTo(px(1),y); cx.stroke();
     if(i%2===0){
-      cx.textAlign='center'; cx.fillText((i*10)+'%',x,H-8);
-      cx.textAlign='right'; cx.fillText((i*10)+'%',PAD.l-5,y+4);
+      const sec=t*S.dur; cx.textAlign='center'; cx.fillText((sec<100?(Math.round(sec*10)/10):Math.round(sec))+' s',x,H-8);
+      const dd=t; cx.textAlign='right'; cx.fillText(Math.round(dd*100)+'%',PAD.l-5,y+4);
+      if(S.span){cx.textAlign='left'; cx.fillText((Math.round(dd*S.span*10)/10)+'°',px(1)-34,y-3);}
     }
   }
   cx.strokeStyle=K('--line2'); cx.strokeRect(px(0),py(1),px(1)-px(0),py(0)-py(1));
@@ -490,7 +501,8 @@ function draw(){
     cx.beginPath(); cx.moveTo(px(rt),py(0)); cx.lineTo(px(rt),py(1)); cx.stroke();
   }
   cx.setLineDash([]);
-  $('#cinfo').textContent=P.length+' pkt.';
+  { const q=P[S.sel], tt=q?Math.round(q.t*S.dur*100)/100:0, yy2=q?Math.round(q.y*1000)/10:0;
+    $('#cinfo').textContent=P.length+' pkt.'+(q?' | pkt '+(S.sel+1)+': '+tt+' s, droga '+yy2+'%'+(S.span?' ('+Math.round(q.y*S.span*10)/10+'°)':''):''); }
 }
 
 function hit(e){
@@ -563,6 +575,7 @@ $('#btnDel').addEventListener('click',()=>{
 });
 $('#btnMirror').addEventListener('click',e=>{S.mirror=!S.mirror;e.target.classList.toggle('on',S.mirror)});
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{histPush(snap(),true);S.pts=presetPts(b.dataset.preset);S.sel=1;clampAll();draw();persist()}));
+$('#span').addEventListener('change',e=>{S.span=clamp(+e.target.value||0,0,3600);e.target.value=S.span||'';store('kawalet.span',S.span);draw()});
 $('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,1,3600);e.target.value=S.dur;persist()});
 $('#btnFs').addEventListener('click',()=>{
   const ed=$('#editor'); ed.classList.toggle('fs');
@@ -613,6 +626,46 @@ $('#selLoad').addEventListener('change',e=>{
   e.target.value='';
 });
 
+/* ========================= EKSPORT / IMPORT / LINK ========================= */
+const r4=v=>Math.round(v*1e4)/1e4;
+function curveObj(){return {dur:S.dur,pts:S.pts.map(q=>({t:r4(q.t),y:r4(q.y),hi:{dx:r4(q.hi.dx),dy:r4(q.hi.dy)},ho:{dx:r4(q.ho.dx),dy:r4(q.ho.dy)}}))}}
+function validCurve(o){
+  const p=o&&o.pts, f=isFinite;
+  return Array.isArray(p)&&p.length>=2&&p.length<=24&&p.every(q=>q&&f(q.t)&&f(q.y)&&q.hi&&q.ho&&f(q.hi.dx)&&f(q.hi.dy)&&f(q.ho.dx)&&f(q.ho.dy))&&Math.abs(p[0].t)<1e-6&&Math.abs(p[p.length-1].t-1)<1e-6&&f(o.dur);
+}
+function applyCurve(o){
+  histPush(snap(),true); S.pts=JSON.parse(JSON.stringify(o.pts)); S.dur=clamp(+o.dur||10,1,3600); $('#dur').value=S.dur; S.sel=1; clampAll(); draw(); persist();
+}
+function encodeLink(){return location.origin+location.pathname+'#c='+btoa(unescape(encodeURIComponent(JSON.stringify(curveObj())))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function decodeHash(){
+  const m=/[#&]c=([A-Za-z0-9_-]+)/.exec(location.hash); if(!m) return null;
+  try{let b=m[1].replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4)b+='='; return JSON.parse(decodeURIComponent(escape(atob(b))))}catch(e){return null}
+}
+$('#btnExp').addEventListener('click',async()=>{
+  const bundle={app:'kawalet',v:1,curves:Object.assign({},store('kawalet.saved')||{},{'(bieżąca)':curveObj()})};
+  const txt=JSON.stringify(bundle,null,1), file=new File([txt],'kawalet-krzywe.json',{type:'application/json'});
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Krzywe Kawalet'});log('Eksport: wysłano arkusz udostępniania');return} }catch(e){ if(e&&e.name==='AbortError')return }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='kawalet-krzywe.json'; document.body.appendChild(a); a.click(); a.remove(); log('Eksport: pobrano kawalet-krzywe.json');
+});
+$('#btnImp').addEventListener('click',()=>$('#fileImp').click());
+$('#fileImp').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{
+    const o=JSON.parse(await f.text()), cur=o.curves||{}; let n=0, last=null;
+    if(o.pts){ if(validCurve(o)){applyCurve(o);log('Import: wczytano krzywą z pliku');return} }
+    const saved=store('kawalet.saved')||{};
+    for(const k of Object.keys(cur)){ if(validCurve(cur[k])){ if(k==='(bieżąca)'){last=cur[k]} else {saved[k]={pts:cur[k].pts,dur:cur[k].dur};n++} } }
+    store('kawalet.saved',saved); refreshList();
+    if(last) applyCurve(last);
+    if(!n&&!last) throw 0;
+    log('Import: zapisanych krzywych '+n+(last?', bieżąca wczytana':''));
+  }catch(err){alert('Nie udało się wczytać pliku (to nie jest plik krzywych Kawalet).')}
+});
+$('#btnLnk').addEventListener('click',async()=>{
+  const u=encodeLink();
+  try{await navigator.clipboard.writeText(u);log('Link do krzywej skopiowany – wklej go na drugim urządzeniu w Bluefy/Chrome')}catch(e){prompt('Skopiuj link do krzywej:',u)}
+});
+
 /* ========================= MOTYWY ========================= */
 const THEMES=[['noc','Szkło'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
 function setTheme(i){
@@ -623,9 +676,12 @@ function setTheme(i){
 $('#btnTheme').addEventListener('click',()=>{ const n=setTheme((S.theme||0)+1); log('Motyw: '+n); });
 
 /* ========================= START ========================= */
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 (function init(){
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
+  { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
+  const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
   clampAll(); refreshList(); renderStatus();
   { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
