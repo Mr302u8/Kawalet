@@ -117,6 +117,12 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
   </div>
 
   <div class="card">
+    <h2>Opcje</h2>
+    <button id="btnBoot" style="width:100%">Tryb programowania (BOOT)</button>
+    <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
+  </div>
+
+  <div class="card">
     <h2>Komunikaty</h2>
     <div id="log"></div>
   </div>
@@ -372,6 +378,7 @@ setInterval(()=>{
 document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>sendLine(b.dataset.cmd)));
 $('#btnStop').addEventListener('click',()=>{sendLine('STOP');sendLine('CURVE ABORT',true)});
 $('#btnEstop').addEventListener('click',()=>{sendLine('ESTOP')});
+$('#btnBoot').addEventListener('click',()=>{if(confirm('Przełączyć Kawalet w tryb programowania?\nSterowanie przestanie działać do ponownego uruchomienia (wyłącz i włącz zasilanie).'))sendLine('BOOT')});
 $('#btnConn').addEventListener('click',()=>{ if(S.mode==='ble'&&S.connected) bleDisconnect(); else bleConnect(); });
 $('#spd').addEventListener('input',e=>{S.spd=+e.target.value;$('#spdv').textContent=S.spd});
 $('#spd').addEventListener('change',()=>sendLine('SPD '+S.spd));

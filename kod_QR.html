@@ -1,0 +1,6 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kawalet QR</title>
+<style>body{font-family:system-ui;text-align:center;margin:24px}#qr{width:min(80vw,420px);margin:16px auto}#qr svg{width:100%;height:auto}</style></head><body>
+<h2>Kawalet — sterowanie</h2><div id="qr"></div>
+<p>Zeskanuj aparatem iPhone'a, potem wybierz „Otwórz w Bluefy" (lub wklej adres w Bluefy).</p><p><b>https://mr302u8.github.io/Kawalet/</b></p>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>const q=qrcode(0,'M');q.addData('https://mr302u8.github.io/Kawalet/');q.make();document.getElementById('qr').innerHTML=q.createSvgTag({cellSize:8,margin:4,scalable:true});</script></body></html>
