@@ -138,10 +138,15 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
     </div>
     <div class="row" style="margin-top:8px">
       <select id="melTempo" style="width:100%;min-height:46px;margin-bottom:8px" title="Tempo melodii">
-        <option value="240">Tempo: wolno</option>
-        <option value="182" selected>Tempo: normalne (jak w tabulaturze)</option>
-        <option value="140">Tempo: szybko</option>
-        <option value="110">Tempo: bardzo szybko</option>
+        <option value="160">Tempo: wolno (ok. 70 s)</option>
+        <option value="120" selected>Tempo: normalne (ok. 50 s)</option>
+        <option value="95">Tempo: szybko (ok. 40 s)</option>
+        <option value="75">Tempo: bardzo szybko (ok. 31 s)</option>
+      </select>
+      <select id="melStac" style="width:100%;min-height:46px;margin-bottom:8px" title="Sposób grania nut">
+        <option value="1" selected>Nuty: pianino (staccato)</option>
+        <option value="2">Nuty: bardzo krótko</option>
+        <option value="0">Nuty: ciągłe (organy)</option>
       </select>
       <select id="melOct" style="width:100%;min-height:46px;margin-bottom:8px" title="Wysokość dźwięku (przesunięcie w półtonach)">
         <option value="-13" selected>Wysokość: jak w grze pianina (niska)</option>
@@ -255,7 +260,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 "use strict";
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const PAGE_VERSION='19.11 noc, b16';
+const PAGE_VERSION='19.11 noc, b17';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -947,10 +952,10 @@ $('#btnMelPlay').addEventListener('click',()=>{
   if(S.mode==='ble'&&!S.melAsked){ if(!confirm('Stół zagra melodię silnikiem. Stół ma stać, nic na nim nie powinno leżeć, a Ty masz mieć pod ręką STOP. Zagrać?')) return; S.melAsked=true; }
   try{store('kawalet.melAmp',$('#melAmp').value)}catch(e){}
   try{store('kawalet.melOct',$('#melOct').value)}catch(e){}
-  try{store('kawalet.melTempo',$('#melTempo').value)}catch(e){}
-  sendLine('MEL PLAY '+$('#melAmp').value+' '+$('#melOct').value+' '+$('#melTempo').value);
+  try{store('kawalet.melTempo',$('#melTempo').value);store('kawalet.melStac',$('#melStac').value)}catch(e){}
+  sendLine('MEL PLAY '+$('#melAmp').value+' '+$('#melOct').value+' '+$('#melTempo').value+' '+$('#melStac').value);
 });
-(function(){ const t=store('kawalet.melTempo'); if(t){ $('#melTempo').value=t; if($('#melTempo').value!==String(t)) $('#melTempo').value='182'; } })();
+(function(){ const t=store('kawalet.melTempo'); if(t){ $('#melTempo').value=t; if($('#melTempo').value!==String(t)) $('#melTempo').value='120'; } const q=store('kawalet.melStac'); if(q){ $('#melStac').value=q; if($('#melStac').value!==String(q)) $('#melStac').value='1'; } })();
 (function(){ const o=store('kawalet.melOct'); if(o){ $('#melOct').value=o; if($('#melOct').value!==String(o)) $('#melOct').value='-13'; } })();
 (function(){ const a=store('kawalet.melAmp'); if(a){ $('#melAmp').value=a; if($('#melAmp').value!==String(a)) $('#melAmp').value='48'; } })();
 
