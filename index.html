@@ -127,6 +127,8 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
   <div id="editor">
     <div class="tool">
       <button id="btnFs">Pełny ekran</button>
+      <button id="btnUndo" disabled>↶ Cofnij</button>
+      <button id="btnRedo" disabled>↷ Ponów</button>
       <button id="btnDel">Usuń punkt</button>
       <button id="btnMirror" class="on">Gładki</button>
       <button data-preset="ab">A→B</button>
@@ -492,6 +494,19 @@ function hit(e){
   if(best>=0) return {k:'pt',i:best};
   return {k:'none',x,y};
 }
+/* ---- cofnij / ponów ---- */
+const hist={u:[],r:[],pre:null};
+const snap=()=>JSON.stringify(S.pts);
+function histBtns(){$('#btnUndo').disabled=!hist.u.length;$('#btnRedo').disabled=!hist.r.length}
+function histPush(pre,force){if(!force&&pre===snap())return;hist.u.push(pre);if(hist.u.length>50)hist.u.shift();hist.r=[];histBtns()}
+function histRestore(from,to){
+  if(!from.length)return;
+  to.push(snap());S.pts=JSON.parse(from.pop());S.sel=Math.min(S.sel,S.pts.length-1);
+  clampAll();draw();persist();histBtns();
+}
+$('#btnUndo').addEventListener('click',()=>histRestore(hist.u,hist.r));
+$('#btnRedo').addEventListener('click',()=>histRestore(hist.r,hist.u));
+cv.addEventListener('pointerdown',()=>{hist.pre=snap()},true);
 cv.addEventListener('pointerdown',e=>{
   cv.setPointerCapture(e.pointerId);
   const h=hit(e);
@@ -529,13 +544,13 @@ cv.addEventListener('pointermove',e=>{
   }
   draw();
 });
-['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>{if(drag){drag=null;persist()}}));
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>{if(drag){drag=null;persist()}if(hist.pre!==null){histPush(hist.pre);hist.pre=null}}));
 
 $('#btnDel').addEventListener('click',()=>{
-  if(S.sel>0&&S.sel<S.pts.length-1){S.pts.splice(S.sel,1);S.sel=Math.min(S.sel,S.pts.length-1);clampAll();draw();persist()}
+  if(S.sel>0&&S.sel<S.pts.length-1){histPush(snap(),true);S.pts.splice(S.sel,1);S.sel=Math.min(S.sel,S.pts.length-1);clampAll();draw();persist()}
 });
 $('#btnMirror').addEventListener('click',e=>{S.mirror=!S.mirror;e.target.classList.toggle('on',S.mirror)});
-document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{S.pts=presetPts(b.dataset.preset);S.sel=1;clampAll();draw();persist()}));
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{histPush(snap(),true);S.pts=presetPts(b.dataset.preset);S.sel=1;clampAll();draw();persist()}));
 $('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,1,3600);e.target.value=S.dur;persist()});
 $('#btnFs').addEventListener('click',()=>{
   const ed=$('#editor'); ed.classList.toggle('fs');
@@ -582,7 +597,7 @@ $('#btnSave').addEventListener('click',()=>{
 });
 $('#selLoad').addEventListener('change',e=>{
   const saved=store('kawalet.saved')||{}, s=saved[e.target.value];
-  if(s){S.pts=JSON.parse(JSON.stringify(s.pts));S.dur=s.dur;$('#dur').value=S.dur;S.sel=1;draw()}
+  if(s){histPush(snap(),true);S.pts=JSON.parse(JSON.stringify(s.pts));S.dur=s.dur;$('#dur').value=S.dur;S.sel=1;draw()}
   e.target.value='';
 });
 
