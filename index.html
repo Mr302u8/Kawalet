@@ -231,10 +231,10 @@ function sendLine(l, quiet){
   (async()=>{
     try{
       for(let i=0;i<data.length;i+=20){
-        await bleChr.writeValueWithoutResponse(data.slice(i,i+20));
+        if(bleChr.writeValueWithoutResponse) await bleChr.writeValueWithoutResponse(data.slice(i,i+20)); else await bleChr.writeValue(data.slice(i,i+20));
         await sleep(12);
       }
-    }catch(e){ log('! błąd zapisu: '+e.message); }
+    }catch(e){ log('! błąd zapisu: '+errText(e)); }
     blePending--;
   })();
 }
@@ -242,14 +242,28 @@ function sendJog(v){ // pomijaj, gdy kolejka zapchana
   if(S.mode==='ble'&&blePending>2&&v!==0) return;
   sendLine('JOG '+Math.round(v),true);
 }
+function errText(e){   // Bluefy i inne przegladarki zwracaja bledy w roznych formatach
+  if(e===undefined||e===null) return 'nieznany blad (brak szczegolow)';
+  if(typeof e==='string') return e;
+  const parts=[]; if(e.name) parts.push(e.name); if(e.message) parts.push(e.message);
+  return parts.length?parts.join(': '):String(e);
+}
+const SVC_FULL='0000ffe0-0000-1000-8000-00805f9b34fb', CHR_FULL='0000ffe1-0000-1000-8000-00805f9b34fb';
 async function bleConnect(){
-  if(!navigator.bluetooth){ alert('Ta przeglądarka nie obsługuje Bluetooth.\nOtwórz tę stronę w aplikacji Bluefy.'); return; }
+  if(!navigator.bluetooth){ log('! Ta przegladarka nie ma Web Bluetooth (otworz strone w Bluefy).'); alert('Ta przeglądarka nie obsługuje Bluetooth.\nOtwórz tę stronę w aplikacji Bluefy.'); return; }
+  let step='wybor urzadzenia';
   try{
-    bleDev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SVC]});
+    log('… szukam urzadzenia (wybierz Kawalet z listy)');
+    bleDev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SVC_FULL]});
+    log('… wybrano: '+(bleDev.name||'(bez nazwy)'));
     bleDev.addEventListener('gattserverdisconnected',()=>{clearInterval(hbTimer);S.connected=false;S.state='ROZŁĄCZONY';log('! Bluetooth rozłączony');renderStatus();});
+    step='polaczenie GATT'; log('… lacze (GATT)');
     const srv=await bleDev.gatt.connect();
-    const svc=await srv.getPrimaryService(SVC);
-    bleChr=await svc.getCharacteristic(CHR);
+    step='usluga FFE0'; log('… szukam uslugi FFE0');
+    const svc=await srv.getPrimaryService(SVC_FULL);
+    step='charakterystyka FFE1'; log('… szukam charakterystyki FFE1');
+    bleChr=await svc.getCharacteristic(CHR_FULL);
+    step='powiadomienia'; log('… wlaczam powiadomienia');
     await bleChr.startNotifications();
     bleChr.addEventListener('characteristicvaluechanged',e=>{
       bleBuf+=new TextDecoder().decode(e.target.value);
@@ -259,7 +273,7 @@ async function bleConnect(){
     log('Połączono z '+(bleDev.name||'modułem'));
     sendLine('VER'); sendLine('PING'); sendLine('SPD '+S.spd); sendLine('RAMP '+S.ramp);
     clearInterval(hbTimer); hbTimer=setInterval(()=>{ if(S.mode==='ble'&&S.connected) sendLine('PING',true); },1000);   // sygnał "żyję": Teensy wysyła status tylko, gdy telefon się odzywa
-  }catch(e){ log('! '+e.message); }
+  }catch(e){ log('! blad w kroku "'+step+'": '+errText(e)); }
   renderStatus();
 }
 function bleDisconnect(){
@@ -561,6 +575,7 @@ $('#selLoad').addEventListener('change',e=>{
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   clampAll(); refreshList(); renderStatus();
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
+  log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony 18.11');
 })();
 </script>
 </body>

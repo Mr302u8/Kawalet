@@ -9,7 +9,7 @@ Plik: `index.html` (jeden plik, bez zależności). Działa w trybie **symulacji*
 - **Bezpieczeństwo strony:** po ukryciu strony wysyła `STOP`; `PING` co sekundę (bez niego Teensy nie rozsyła statusu).
 
 ## Użycie
-1. Otwórz stronę w **Bluefy** (musi być pod HTTPS, np. GitHub Pages; jeszcze nieopublikowana).
+1. Otwórz stronę w **Bluefy**: https://mr302u8.github.io/Kawalet/ (opublikowana 18.11.2026 na GitHub Pages, repozytorium publiczne `Kawalet`; zawiera tylko plik `index.html`).
 2. „Połącz" → wybierz moduł (nazwa np. „AT-09", „HMSoft", „BT05").
 3. Status w nagłówku: tryb, stan (`IDLE`, `GOTO`, `JOG`, `HOME`, `ESTOP`, `NOHOME`).
 
@@ -22,3 +22,6 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 ## Protokół
 `../dokumentacja/Kawalet_protokol_BLE.md`.
+
+## Aktualizacja opublikowanej strony
+Po zmianie `index.html` wgraj go ponownie do repozytorium na GitHubie (Add file > Upload files, nadpisz `index.html`, Commit). Po ok. minucie zmiana jest pod adresem https://mr302u8.github.io/Kawalet/. Pamiętaj, że Bluefy może trzymać starą wersję w pamięci podręcznej (odśwież stronę).
