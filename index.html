@@ -154,11 +154,9 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
   <div class="card">
     <h2>Opcje</h2>
     <button id="btnBoot" style="width:100%">Tryb programowania (BOOT)</button>
-    <button id="btnDefaults" style="width:100%;margin-top:8px">Przywróć ustawienia domyślne</button>
+    <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
     <button id="btnForce" style="width:100%;margin-top:8px">Wymuś aktualizację strony</button>
     <div id="verTxt" style="font-size:12px;opacity:.7;margin-top:6px"></div>
-    <div style="font-size:12px;opacity:.7;margin-top:6px">Kasuje zapamiętane: krzywe robocze (A→B, A→B→A, Zygzak), prędkość, rampę, tryb drogi, motyw. Zapisane pod nazwą krzywe i hasło chmury zostają.</div>
-    <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
   </div>
 
   <div class="card">
@@ -249,7 +247,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 "use strict";
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const PAGE_VERSION='19.11 noc, b12';
+const PAGE_VERSION='19.11 noc, b14';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -505,11 +503,6 @@ setInterval(()=>{
 document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>sendLine(b.dataset.cmd)));
 $('#btnStop').addEventListener('click',()=>{sendLine('STOP');sendLine('CURVE ABORT',true)});
 $('#btnEstop').addEventListener('click',()=>{sendLine('ESTOP')});
-$('#btnDefaults').addEventListener('click',()=>{
-  if(!confirm('Przywrócić ustawienia domyślne? Krzywe robocze, prędkość, rampa, tryb drogi i motyw wrócą do początkowych. Zapisane krzywe i hasło chmury zostają.')) return;
-  ['kawalet.last','kawalet.presets','kawalet.curPreset','kawalet.params','kawalet.cparams','kawalet.rel','kawalet.span','kawalet.theme'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});
-  location.reload();
-});
 $('#verTxt').textContent='Wersja strony: '+PAGE_VERSION;
 $('#btnForce').addEventListener('click',async()=>{
   try{ if('serviceWorker' in navigator){ const rs=await navigator.serviceWorker.getRegistrations(); for(const r of rs) await r.unregister(); }
