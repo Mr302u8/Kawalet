@@ -149,6 +149,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button data-preset="ab">A→B</button>
       <button data-preset="aba">A→B→A</button>
       <button data-preset="zig">Zygzak</button>
+      <button id="btnReset" title="Przywróć podstawową wersję wybranej krzywej">↺ Reset</button>
       <button id="btnSave">Zapisz…</button>
       <select id="selLoad" style="width:auto;min-height:40px;padding:6px"><option value="">Wczytaj…</option></select>
       <button id="btnExp">Eksport</button>
@@ -166,6 +167,22 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <span class="small" id="cinfo"></span>
     </div>
     <div id="cwrap"><canvas id="cv"></canvas></div>
+    <div class="row">
+      <label style="flex:0 0 auto;min-width:130px">Prędkość: <b id="spdv2">10</b> / 22</label>
+      <input id="spd2" type="range" min="1" max="22" value="10" style="flex:1;min-width:120px">
+    </div>
+    <div class="row">
+      <label style="flex:0 0 auto;min-width:130px">Rampa: <b id="rampv2">50</b> %</label>
+      <input id="ramp2" type="range" min="0" max="100" value="50" style="flex:1;min-width:120px">
+    </div>
+    <div class="row" style="gap:6px">
+      <button data-cmd="HOME" style="padding:8px 10px;min-height:40px;font-size:14px">HOME</button>
+      <button data-cmd="SETA" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw A</button>
+      <button data-cmd="SETB" style="padding:8px 10px;min-height:40px;font-size:14px">Ustaw B</button>
+      <button data-cmd="GOA" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do A</button>
+      <button data-cmd="GOB" class="acc" style="padding:8px 10px;min-height:40px;font-size:14px">Idź do B</button>
+      <span class="small" style="margin-left:auto">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></span>
+    </div>
     <div class="row" id="scrubRow">
       <label style="flex:0 0 auto">Czas</label>
       <input id="scrub" type="range" min="0" max="100" step="0.5" value="0" style="flex:1;min-width:120px">
@@ -263,7 +280,7 @@ function renderStatus(){
   $('#status').innerHTML='Tryb: <b>'+m+'</b> · stan: <b>'+S.state+'</b>';
   $('#btnConn').textContent=S.mode==='ble'&&S.connected?'Rozłącz':(S.mode==='sim'?'Połącz':'Połącz');
   $('#posfill').style.width=(clamp(S.pos,0,1)*100)+'%';
-  $('#postxt').textContent=Math.round(S.pos*100)+' %';
+  $('#postxt').textContent=Math.round(S.pos*100)+' %'; $('#postxt2').textContent=Math.round(S.pos*100)+' %';
 }
 
 /* ========================= TRANSPORT ========================= */
@@ -404,10 +421,10 @@ $('#btnStop').addEventListener('click',()=>{sendLine('STOP');sendLine('CURVE ABO
 $('#btnEstop').addEventListener('click',()=>{sendLine('ESTOP')});
 $('#btnBoot').addEventListener('click',()=>{if(confirm('Przełączyć Kawalet w tryb programowania?\nSterowanie przestanie działać do ponownego uruchomienia (wyłącz i włącz zasilanie).'))sendLine('BOOT')});
 $('#btnConn').addEventListener('click',()=>{ if(S.mode==='ble'&&S.connected) bleDisconnect(); else bleConnect(); });
-$('#spd').addEventListener('input',e=>{S.spd=+e.target.value;$('#spdv').textContent=S.spd});
-$('#spd').addEventListener('change',()=>sendLine('SPD '+S.spd));
-$('#ramp').addEventListener('input',e=>{S.ramp=+e.target.value;$('#rampv').textContent=S.ramp});
-$('#ramp').addEventListener('change',()=>sendLine('RAMP '+S.ramp));
+function setSpdUI(v){S.spd=v;['#spdv','#spdv2'].forEach(i=>$(i).textContent=v);['#spd','#spd2'].forEach(i=>$(i).value=v)}
+function setRampUI(v){S.ramp=v;['#rampv','#rampv2'].forEach(i=>$(i).textContent=v);['#ramp','#ramp2'].forEach(i=>$(i).value=v)}
+['#spd','#spd2'].forEach(i=>{$(i).addEventListener('input',e=>setSpdUI(+e.target.value));$(i).addEventListener('change',()=>sendLine('SPD '+S.spd))});
+['#ramp','#ramp2'].forEach(i=>{$(i).addEventListener('input',e=>setRampUI(+e.target.value));$(i).addEventListener('change',()=>sendLine('RAMP '+S.ramp))});
 
 // Pad do przesuwania na żywo
 (function(){
@@ -532,12 +549,12 @@ function hit(e){
 }
 /* ---- cofnij / ponów ---- */
 const hist={u:[],r:[],pre:null};
-const snap=()=>JSON.stringify(S.pts);
+const snap=()=>JSON.stringify({pts:S.pts,pre:S.curPreset||null});
 function histBtns(){$('#btnUndo').disabled=!hist.u.length;$('#btnRedo').disabled=!hist.r.length}
 function histPush(pre,force){if(!force&&pre===snap())return;hist.u.push(pre);if(hist.u.length>50)hist.u.shift();hist.r=[];histBtns()}
 function histRestore(from,to){
   if(!from.length)return;
-  to.push(snap());S.pts=JSON.parse(from.pop());S.sel=Math.min(S.sel,S.pts.length-1);
+  to.push(snap());{const o=JSON.parse(from.pop());S.pts=o.pts;S.curPreset=o.pre||null;markPreset()} S.sel=Math.min(S.sel,S.pts.length-1);
   clampAll();draw();persist();histBtns();
 }
 $('#btnUndo').addEventListener('click',()=>histRestore(hist.u,hist.r));
@@ -586,7 +603,25 @@ $('#btnDel').addEventListener('click',()=>{
   if(S.sel>0&&S.sel<S.pts.length-1){histPush(snap(),true);S.pts.splice(S.sel,1);S.sel=Math.min(S.sel,S.pts.length-1);clampAll();draw();persist()}
 });
 $('#btnMirror').addEventListener('click',e=>{S.mirror=!S.mirror;e.target.classList.toggle('on',S.mirror)});
-document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{histPush(snap(),true);S.pts=presetPts(b.dataset.preset);S.sel=1;clampAll();draw();persist()}));
+/* presety pamiętają Twoje zmiany: edycje są zapisywane osobno dla A→B, A→B→A i Zygzaka */
+let presetStore=store('kawalet.presets')||{};
+S.curPreset=store('kawalet.curPreset')||(store('kawalet.last')?null:'ab');
+function markPreset(){document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('on',b.dataset.preset===S.curPreset))}
+function savePresetState(){ if(S.curPreset){ presetStore[S.curPreset]={pts:JSON.parse(JSON.stringify(S.pts)),dur:S.dur}; store('kawalet.presets',presetStore); } store('kawalet.curPreset',S.curPreset); }
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  const name=b.dataset.preset; if(name===S.curPreset) return;
+  savePresetState(); histPush(snap(),true);
+  const st=presetStore[name]; S.curPreset=name;
+  if(st&&validCurve(st)){S.pts=JSON.parse(JSON.stringify(st.pts));S.dur=clamp(+st.dur||S.dur,1,3600);$('#dur').value=S.dur} else S.pts=presetPts(name);
+  S.sel=1;clampAll();markPreset();draw();persist();scrubUpdate(false);
+}));
+$('#btnReset').addEventListener('click',()=>{
+  const name=S.curPreset||'ab';
+  const label={ab:'A→B',aba:'A→B→A',zig:'Zygzak'}[name];
+  if(!confirm('Przywrócić podstawową wersję krzywej „'+label+'"? (Twoje zmiany tej krzywej zostaną usunięte; można je cofnąć przyciskiem Cofnij)')) return;
+  histPush(snap(),true); S.curPreset=name; delete presetStore[name]; store('kawalet.presets',presetStore);
+  S.pts=presetPts(name); S.sel=1; clampAll(); markPreset(); draw(); persist(); scrubUpdate(false);
+});
 /* ---- suwak czasu (podgląd i jazda stołu) ---- */
 let scrubLast=0;
 function scrubUpdate(send){
@@ -635,7 +670,7 @@ $('#btnAbort').addEventListener('click',()=>{sendLine('CURVE ABORT');sendLine('S
 
 /* ---- zapisane krzywe ---- */
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
-function persist(){store('kawalet.last',{pts:S.pts,dur:S.dur})}
+function persist(){store('kawalet.last',{pts:S.pts,dur:S.dur}); if(typeof savePresetState==='function') savePresetState()}
 function refreshList(){
   const sel=$('#selLoad'), saved=store('kawalet.saved')||{};
   sel.innerHTML='<option value="">Wczytaj…</option>'+Object.keys(saved).map(n=>'<option>'+n.replace(/</g,'&lt;')+'</option>').join('');
@@ -646,7 +681,7 @@ $('#btnSave').addEventListener('click',()=>{
 });
 $('#selLoad').addEventListener('change',e=>{
   const saved=store('kawalet.saved')||{}, s=saved[e.target.value];
-  if(s){histPush(snap(),true);S.pts=JSON.parse(JSON.stringify(s.pts));S.dur=s.dur;$('#dur').value=S.dur;S.sel=1;draw()}
+  if(s){histPush(snap(),true);S.curPreset=null;markPreset();S.pts=JSON.parse(JSON.stringify(s.pts));S.dur=s.dur;$('#dur').value=S.dur;S.sel=1;draw()}
   e.target.value='';
 });
 
@@ -658,7 +693,7 @@ function validCurve(o){
   return Array.isArray(p)&&p.length>=2&&p.length<=24&&p.every(q=>q&&f(q.t)&&f(q.y)&&q.hi&&q.ho&&f(q.hi.dx)&&f(q.hi.dy)&&f(q.ho.dx)&&f(q.ho.dy))&&Math.abs(p[0].t)<1e-6&&Math.abs(p[p.length-1].t-1)<1e-6&&f(o.dur);
 }
 function applyCurve(o){
-  histPush(snap(),true); S.pts=JSON.parse(JSON.stringify(o.pts)); S.dur=clamp(+o.dur||10,1,3600); $('#dur').value=S.dur; S.sel=1; clampAll(); draw(); persist();
+  histPush(snap(),true); S.curPreset=null; if(typeof markPreset==='function')markPreset(); S.pts=JSON.parse(JSON.stringify(o.pts)); S.dur=clamp(+o.dur||10,1,3600); $('#dur').value=S.dur; S.sel=1; clampAll(); draw(); persist();
 }
 function encodeLink(){return location.origin+location.pathname+'#c='+btoa(unescape(encodeURIComponent(JSON.stringify(curveObj())))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function decodeHash(){
@@ -736,8 +771,8 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
   scrubUpdate(false);
-  const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
-  clampAll(); refreshList(); renderStatus();
+  const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.curPreset=null;S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
+  clampAll(); refreshList(); renderStatus(); markPreset();
   { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
   log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony 18.11');
