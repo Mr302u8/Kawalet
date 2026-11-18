@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Kawalet</title>
+<style>
+:root{
+  --bg:#12151a; --panel:#1b2028; --line:#2c3440; --text:#e8ecf2; --dim:#8c97a8;
+  --acc:#4da3ff; --ok:#3ecf8e; --warn:#ffb020; --bad:#ff4d4d;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font:16px/1.35 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
+body{display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:18px;margin:0;flex:0 0 auto}
+#status{flex:1;font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#status b{color:var(--text)}
+button{font:inherit;color:var(--text);background:#262d38;border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:46px;touch-action:manipulation}
+button:active{background:#323b49}
+button.acc{background:var(--acc);border-color:var(--acc);color:#04121f;font-weight:600}
+button.ok{background:var(--ok);border-color:var(--ok);color:#04150d;font-weight:600}
+button.stop{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:800;letter-spacing:.5px;min-width:84px}
+button.on{outline:2px solid var(--acc)}
+button[disabled]{opacity:.4}
+main{flex:1;min-height:0;overflow:auto;position:relative}
+.tab{display:none;padding:12px;min-height:100%}
+.tab.active{display:block}
+nav{display:flex;border-top:1px solid var(--line);background:var(--panel)}
+nav button{flex:1;border:0;border-radius:0;background:transparent;min-height:52px;color:var(--dim)}
+nav button.active{color:var(--acc);box-shadow:inset 0 3px 0 var(--acc)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.card h2{font-size:13px;color:var(--dim);margin:0 0 8px;text-transform:uppercase;letter-spacing:.6px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label{font-size:14px;color:var(--dim)}
+input[type=range]{width:100%;height:36px}
+input[type=number],select{font:inherit;color:var(--text);background:#0e1116;border:1px solid var(--line);border-radius:10px;padding:10px;min-height:44px;width:100%}
+#posbar{height:14px;border-radius:7px;background:#0e1116;border:1px solid var(--line);position:relative;overflow:hidden}
+#posfill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--acc)}
+#pad{height:120px;border-radius:16px;background:#0e1116;border:1px solid var(--line);position:relative;touch-action:none;user-select:none}
+#pad::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:2px;background:var(--line)}
+#thumb{position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:var(--acc);opacity:.9}
+#padlbl{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:13px;color:var(--dim);pointer-events:none}
+.pm{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:4px}
+#editor{display:flex;flex-direction:column;gap:8px}
+#editor.fs{position:fixed;inset:0;z-index:50;background:var(--bg);padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left))}
+#cwrap{position:relative;flex:1;min-height:300px;border-radius:14px;background:#0e1116;border:1px solid var(--line);overflow:hidden}
+#editor.fs #cwrap{min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#log{font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim);max-height:160px;overflow:auto;white-space:pre-wrap}
+.small{font-size:12px;color:var(--dim)}
+.tool{display:flex;gap:6px;flex-wrap:wrap}
+.tool button{padding:8px 10px;min-height:40px;font-size:14px}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Kawalet</h1>
+  <div id="status">Tryb: <b>symulacja</b></div>
+  <button id="btnConn" class="acc">Połącz</button>
+  <button id="btnStop" class="stop">STOP</button>
+</header>
+
+<main>
+<!-- ============ STEROWANIE ============ -->
+<section id="tab-ctl" class="tab active">
+  <div class="card">
+    <h2>Pozycja (A → B)</h2>
+    <div id="posbar"><div id="posfill"></div></div>
+    <div class="pm"><span>A</span><span id="postxt">0 %</span><span>B</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Przesuwanie na żywo</h2>
+    <div id="pad"><div id="thumb"></div><div id="padlbl">przesuń palcem w lewo / prawo, puść = stop</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Polecenia</h2>
+    <div class="grid3">
+      <button data-cmd="HOME">HOME</button>
+      <button data-cmd="SETA">Ustaw A</button>
+      <button data-cmd="SETB">Ustaw B</button>
+      <button data-cmd="GOA" class="acc">Idź do A</button>
+      <button data-cmd="GOB" class="acc">Idź do B</button>
+      <button id="btnEstop" class="stop">E-STOP</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Prędkość i rampy</h2>
+    <label>Prędkość maksymalna: <b id="spdv">10</b> / 22</label>
+    <input id="spd" type="range" min="1" max="22" value="10">
+    <label>Rampa (łagodność): <b id="rampv">50</b> %</label>
+    <input id="ramp" type="range" min="0" max="100" value="50">
+  </div>
+
+  <div class="card">
+    <h2>Komunikaty</h2>
+    <div id="log"></div>
+  </div>
+</section>
+
+<!-- ============ KRZYWA ============ -->
+<section id="tab-crv" class="tab">
+  <div id="editor">
+    <div class="tool">
+      <button id="btnFs">Pełny ekran</button>
+      <button id="btnDel">Usuń punkt</button>
+      <button id="btnMirror" class="on">Gładki</button>
+      <button data-preset="ab">A→B</button>
+      <button data-preset="aba">A→B→A</button>
+      <button data-preset="zig">Zygzak</button>
+      <button id="btnSave">Zapisz…</button>
+      <select id="selLoad" style="width:auto;min-height:40px;padding:6px"><option value="">Wczytaj…</option></select>
+    </div>
+    <div class="row">
+      <label style="flex:0 0 auto">Czas ruchu [s]</label>
+      <input id="dur" type="number" min="1" max="3600" step="0.5" value="10" style="width:90px">
+      <span class="small" id="cinfo"></span>
+    </div>
+    <div id="cwrap"><canvas id="cv"></canvas></div>
+    <div class="row">
+      <button id="btnSend" class="acc" style="flex:1">Wyślij do Kawaleta</button>
+      <button id="btnRun" class="ok" style="flex:1">Start</button>
+      <button id="btnAbort" style="flex:1">Przerwij</button>
+    </div>
+    <div class="small">Dotknij pustego miejsca = nowy punkt. Dotknij punktu = uchwyty (kwadraty) do ustawiania ramp. Oś pozioma: czas, pionowa: położenie od A (dół) do B (góra).</div>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button id="nav-ctl" class="active">Sterowanie</button>
+  <button id="nav-crv">Krzywa</button>
+</nav>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ========================= STAN ========================= */
+const S={
+  mode:'sim',            // 'sim' albo 'ble'
+  connected:false,
+  pos:0, state:'IDLE', spd:10, ramp:50,
+  dur:10,
+  mirror:true,
+  sel:1,
+  runStart:0, running:false,
+  pts:presetPts('ab')
+};
+
+function mkPt(t,y,hin,hout){return {t,y,hi:{dx:hin,dy:0},ho:{dx:hout,dy:0}}}
+function presetPts(name){
+  if(name==='aba') return [mkPt(0,0,0,.17),mkPt(.5,1,.17,.17),mkPt(1,0,.17,0)];
+  if(name==='zig'){
+    const y=[0,.7,.3,1,0.5], r=[];
+    y.forEach((v,i)=>r.push(mkPt(i/(y.length-1),v,.08,.08)));
+    r[0].hi.dx=0; r[r.length-1].ho.dx=0; return r;
+  }
+  return [mkPt(0,0,0,.33),mkPt(1,1,.33,0)];
+}
+
+/* ========================= KRZYWA (Bezier) ========================= */
+function ctrl(a,b){
+  const g=b.t-a.t;
+  return [{x:a.t,y:a.y},
+          {x:a.t+Math.min(a.ho.dx,g),y:a.y+a.ho.dy},
+          {x:b.t-Math.min(b.hi.dx,g),y:b.y-b.hi.dy},
+          {x:b.t,y:b.y}];
+}
+function bez(p,s){
+  const u=1-s,a=u*u*u,b=3*u*u*s,c=3*u*s*s,d=s*s*s;
+  return {x:a*p[0].x+b*p[1].x+c*p[2].x+d*p[3].x, y:a*p[0].y+b*p[1].y+c*p[2].y+d*p[3].y};
+}
+function yAt(pts,t){
+  if(t<=pts[0].t) return pts[0].y;
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i],b=pts[i+1];
+    if(t<=b.t){
+      const p=ctrl(a,b); let lo=0,hi=1;
+      for(let k=0;k<32;k++){const m=(lo+hi)/2; if(bez(p,m).x<t) lo=m; else hi=m;}
+      return bez(p,(lo+hi)/2).y;
+    }
+  }
+  return pts[pts.length-1].y;
+}
+function clampHandles(i){
+  const P=S.pts, p=P[i];
+  const gapPrev=i>0?p.t-P[i-1].t:0, gapNext=i<P.length-1?P[i+1].t-p.t:0;
+  p.hi.dx=i>0?clamp(p.hi.dx,0,gapPrev):0;
+  p.ho.dx=i<P.length-1?clamp(p.ho.dx,0,gapNext):0;
+  p.ho.dy=clamp(p.y+p.ho.dy,0,1)-p.y;
+  p.hi.dy=p.y-clamp(p.y-p.hi.dy,0,1);
+  if(i===0){p.hi.dx=0;p.hi.dy=0}
+  if(i===P.length-1){p.ho.dx=0;p.ho.dy=0}
+}
+function clampAll(){S.pts.forEach((_,i)=>clampHandles(i))}
+
+/* ========================= LOG / STATUS ========================= */
+function log(m){
+  const el=$('#log'); el.textContent+=m+'\n';
+  const lines=el.textContent.split('\n'); if(lines.length>80) el.textContent=lines.slice(-60).join('\n');
+  el.scrollTop=el.scrollHeight;
+}
+function renderStatus(){
+  const m=S.mode==='sim'?'symulacja':(S.connected?'Bluetooth':'rozłączony');
+  $('#status').innerHTML='Tryb: <b>'+m+'</b> · stan: <b>'+S.state+'</b>';
+  $('#btnConn').textContent=S.mode==='ble'&&S.connected?'Rozłącz':(S.mode==='sim'?'Połącz':'Połącz');
+  $('#posfill').style.width=(clamp(S.pos,0,1)*100)+'%';
+  $('#postxt').textContent=Math.round(S.pos*100)+' %';
+}
+
+/* ========================= TRANSPORT ========================= */
+const SVC=0xFFE0, CHR=0xFFE1;
+let bleDev=null, bleChr=null, bleBuf='', blePending=0, hbTimer=null;
+
+function sendLine(l, quiet){
+  if(!quiet) log('→ '+l);
+  if(S.mode==='sim'){ Sim.recv(l); return; }
+  if(!S.connected||!bleChr){ log('! brak połączenia'); return; }
+  const data=new TextEncoder().encode(l+'\n');
+  blePending++;
+  (async()=>{
+    try{
+      for(let i=0;i<data.length;i+=20){
+        await bleChr.writeValueWithoutResponse(data.slice(i,i+20));
+        await sleep(12);
+      }
+    }catch(e){ log('! błąd zapisu: '+e.message); }
+    blePending--;
+  })();
+}
+function sendJog(v){ // pomijaj, gdy kolejka zapchana
+  if(S.mode==='ble'&&blePending>2&&v!==0) return;
+  sendLine('JOG '+Math.round(v),true);
+}
+async function bleConnect(){
+  if(!navigator.bluetooth){ alert('Ta przeglądarka nie obsługuje Bluetooth.\nOtwórz tę stronę w aplikacji Bluefy.'); return; }
+  try{
+    bleDev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SVC]});
+    bleDev.addEventListener('gattserverdisconnected',()=>{clearInterval(hbTimer);S.connected=false;S.state='ROZŁĄCZONY';log('! Bluetooth rozłączony');renderStatus();});
+    const srv=await bleDev.gatt.connect();
+    const svc=await srv.getPrimaryService(SVC);
+    bleChr=await svc.getCharacteristic(CHR);
+    await bleChr.startNotifications();
+    bleChr.addEventListener('characteristicvaluechanged',e=>{
+      bleBuf+=new TextDecoder().decode(e.target.value);
+      let i; while((i=bleBuf.indexOf('\n'))>=0){ onLine(bleBuf.slice(0,i).trim()); bleBuf=bleBuf.slice(i+1); }
+    });
+    S.mode='ble'; S.connected=true; S.state='POŁĄCZONY';
+    log('Połączono z '+(bleDev.name||'modułem'));
+    sendLine('VER'); sendLine('PING'); sendLine('SPD '+S.spd); sendLine('RAMP '+S.ramp);
+    clearInterval(hbTimer); hbTimer=setInterval(()=>{ if(S.mode==='ble'&&S.connected) sendLine('PING',true); },1000);   // sygnał "żyję": Teensy wysyła status tylko, gdy telefon się odzywa
+  }catch(e){ log('! '+e.message); }
+  renderStatus();
+}
+function bleDisconnect(){
+  clearInterval(hbTimer);
+  try{ if(bleDev&&bleDev.gatt.connected) bleDev.gatt.disconnect(); }catch(e){}
+  S.mode='sim'; S.connected=false; S.state='IDLE'; renderStatus();
+}
+function onLine(l){
+  if(!l) return;
+  const w=l.split(/\s+/);
+  if(w[0]==='ST'){ S.pos=(+w[1])/1000; S.state=w[2]||S.state; if(w[3]) S.spdDev=+w[3]; renderStatus(); drawSoon(); return; }
+  log('← '+l);
+  if(w[0]==='ERR'){ if(l.indexOf('CURVE RUN')>=0){ S.state='IDLE'; renderStatus(); alert('Kawalet: ruch po krzywej nie jest jeszcze włączony w programie Teensy (krzywa została odebrana i sprawdzona).'); } else if(l.indexOf('NOHOME')>=0){ alert('Kawalet wymaga najpierw HOME.'); } else if(l.indexOf('ESTOP')>=0){ alert('Kawalet jest w stanie E-STOP. Zdejmij go przyciskiem HOME na urządzeniu.'); } }
+}
+
+/* ========================= SYMULATOR ========================= */
+const Sim={
+  pos:0,v:0,state:'IDLE',jog:0,lastJog:0,target:null,curve:null,tmp:null,cstart:0,spd:10,ramp:50,home:false,
+  recv(l){
+    const w=l.trim().split(/\s+/), c=w[0];
+    const reply=m=>setTimeout(()=>onLine(m),40);
+    if(c==='PING') reply('OK PING');
+    else if(c==='SPD'){this.spd=clamp(+w[1]||10,1,22);reply('OK SPD '+this.spd)}
+    else if(c==='RAMP'){this.ramp=clamp(+w[1]||50,0,100);reply('OK RAMP '+this.ramp)}
+    else if(c==='JOG'){this.jog=clamp((+w[1]||0)/100,-1,1);this.lastJog=performance.now();if(this.jog!==0){this.target=null;this.curve&&this.state==='RUN'&&(this.state='IDLE')}}
+    else if(c==='STOP'||c==='ESTOP'){this.target=null;this.jog=0;if(this.state==='RUN')this.state='IDLE';reply('OK '+c)}
+    else if(c==='GOA'){this.target=0;this.state='GOTO';reply('OK GOA')}
+    else if(c==='GOB'){this.target=1;this.state='GOTO';reply('OK GOB')}
+    else if(c==='HOME'){this.target=0;this.state='HOME';reply('MSG SYM: homing')}
+    else if(c==='SETA'){reply('MSG SYM: A zapisane')}
+    else if(c==='SETB'){reply('MSG SYM: B zapisane')}
+    else if(c==='CURVE'){
+      if(w[1]==='BEGIN'){this.tmp={dur:(+w[2])/1000,n:+w[3],pts:[]};}
+      else if(w[1]==='END'){
+        if(this.tmp&&this.tmp.pts.length===this.tmp.n){this.curve=this.tmp;reply('OK CURVE '+this.tmp.n)} else reply('ERR CURVE niepelna');
+      } else if(w[1]==='RUN'){
+        if(!this.curve){reply('ERR brak krzywej');return}
+        this.cstart=performance.now();this.state='RUN';this.target=null;reply('OK RUN');
+      } else if(w[1]==='ABORT'){if(this.state==='RUN')this.state='IDLE';reply('OK ABORT')}
+    }
+    else if(c==='K'&&this.tmp){
+      const n=w.slice(2).map(Number); // t y hi.dx hi.dy ho.dx ho.dy  [promile]
+      this.tmp.pts[+w[1]]={t:n[0]/1000,y:n[1]/1000,hi:{dx:n[2]/1000,dy:n[3]/1000},ho:{dx:n[4]/1000,dy:n[5]/1000}};
+    }
+    else reply('ERR nieznane: '+l);
+  },
+  tick(dt){
+    const maxv=0.5*this.spd/22, acc=maxv*(0.5+(100-this.ramp)/40);
+    let vt=0;
+    if(this.state==='RUN'&&this.curve){
+      const t=(performance.now()-this.cstart)/1000/this.curve.dur;
+      if(t>=1){this.pos=this.curve.pts[this.curve.pts.length-1].y;this.state='IDLE';this.v=0;}
+      else{this.pos=yAt(this.curve.pts,t);}
+    } else {
+      if(performance.now()-this.lastJog>400) this.jog=0;
+      if(this.jog!==0) vt=this.jog*maxv;
+      else if(this.target!==null){
+        const d=this.target-this.pos, stop=this.v*this.v/(2*acc);
+        if(Math.abs(d)<0.002&&Math.abs(this.v)<0.02){this.pos=this.target;this.target=null;this.v=0;this.state='IDLE';}
+        else vt=(Math.abs(d)<=stop?0:Math.sign(d)*maxv);
+      }
+      const dv=clamp(vt-this.v,-acc*dt,acc*dt); this.v+=dv;
+      this.pos=clamp(this.pos+this.v*dt,0,1);
+      if(this.jog===0&&this.target===null&&Math.abs(this.v)<0.001&&this.state!=='RUN') this.state='IDLE';
+    }
+    S.pos=this.pos; S.state=this.state;
+  }
+};
+let lastTick=performance.now();
+setInterval(()=>{
+  const now=performance.now(), dt=Math.min(.1,(now-lastTick)/1000); lastTick=now;
+  if(S.mode==='sim'){ Sim.tick(dt); renderStatus(); }
+  drawSoon();
+},50);
+
+/* ========================= STEROWANIE: UI ========================= */
+document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>sendLine(b.dataset.cmd)));
+$('#btnStop').addEventListener('click',()=>{sendLine('STOP');sendLine('CURVE ABORT',true)});
+$('#btnEstop').addEventListener('click',()=>{sendLine('ESTOP')});
+$('#btnConn').addEventListener('click',()=>{ if(S.mode==='ble'&&S.connected) bleDisconnect(); else bleConnect(); });
+$('#spd').addEventListener('input',e=>{S.spd=+e.target.value;$('#spdv').textContent=S.spd});
+$('#spd').addEventListener('change',()=>sendLine('SPD '+S.spd));
+$('#ramp').addEventListener('input',e=>{S.ramp=+e.target.value;$('#rampv').textContent=S.ramp});
+$('#ramp').addEventListener('change',()=>sendLine('RAMP '+S.ramp));
+
+// Pad do przesuwania na żywo
+(function(){
+  const pad=$('#pad'), th=$('#thumb'); let act=false, v=0, timer=null;
+  function upd(e){
+    const r=pad.getBoundingClientRect(), x=e.clientX-r.left, half=r.width/2;
+    v=clamp((x-half)/(half-32)*100,-100,100);
+    th.style.left=(50+v/100*((half-32)/r.width*100))+'%';
+    $('#padlbl').textContent='prędkość '+Math.round(v)+' %';
+  }
+  function end(){
+    if(!act) return; act=false; clearInterval(timer);
+    v=0; th.style.left='50%'; $('#padlbl').textContent='przesuń palcem w lewo / prawo, puść = stop';
+    sendJog(0); setTimeout(()=>sendJog(0),60); setTimeout(()=>sendJog(0),150);
+  }
+  pad.addEventListener('pointerdown',e=>{
+    act=true; pad.setPointerCapture(e.pointerId); upd(e);
+    sendJog(v); timer=setInterval(()=>sendJog(v),100);
+  });
+  pad.addEventListener('pointermove',e=>{if(act)upd(e)});
+  pad.addEventListener('pointerup',end);
+  pad.addEventListener('pointercancel',end);
+  pad.addEventListener('lostpointercapture',end);
+})();
+
+// Bezpieczeństwo: ukrycie strony = STOP
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ sendLine('STOP',true); } });
+
+/* ========================= ZAKŁADKI ========================= */
+function showTab(n){
+  $('#tab-ctl').classList.toggle('active',n==='ctl');
+  $('#tab-crv').classList.toggle('active',n==='crv');
+  $('#nav-ctl').classList.toggle('active',n==='ctl');
+  $('#nav-crv').classList.toggle('active',n==='crv');
+  if(n==='crv') setTimeout(()=>{resize();draw()},0);
+}
+$('#nav-ctl').addEventListener('click',()=>showTab('ctl'));
+$('#nav-crv').addEventListener('click',()=>showTab('crv'));
+
+/* ========================= EDYTOR KRZYWEJ ========================= */
+const cv=$('#cv'), cx=cv.getContext('2d');
+let W=0,H=0,DPR=1, drag=null, needDraw=false;
+const PAD={l:38,r:14,t:14,b:26};
+function resize(){
+  const r=cv.getBoundingClientRect(); DPR=window.devicePixelRatio||1;
+  W=r.width; H=r.height; cv.width=Math.max(1,W*DPR); cv.height=Math.max(1,H*DPR);
+  cx.setTransform(DPR,0,0,DPR,0,0);
+}
+new ResizeObserver(()=>{resize();draw()}).observe($('#cwrap'));
+const px=t=>PAD.l+t*(W-PAD.l-PAD.r), py=y=>PAD.t+(1-y)*(H-PAD.t-PAD.b);
+const ux=x=>(x-PAD.l)/(W-PAD.l-PAD.r), uy=y=>1-(y-PAD.t)/(H-PAD.t-PAD.b);
+function drawSoon(){ if(needDraw) return; needDraw=true; requestAnimationFrame(()=>{needDraw=false;draw()}); }
+
+function draw(){
+  if(!W||!$('#tab-crv').classList.contains('active')) return;
+  const c=getComputedStyle(document.documentElement);
+  cx.clearRect(0,0,W,H);
+  // siatka
+  cx.font='11px -apple-system,system-ui,sans-serif'; cx.fillStyle='#8c97a8'; cx.strokeStyle='#232a35'; cx.lineWidth=1;
+  for(let i=0;i<=10;i++){
+    const t=i/10, x=px(t), y=py(t);
+    cx.beginPath(); cx.moveTo(x,py(0)); cx.lineTo(x,py(1)); cx.stroke();
+    cx.beginPath(); cx.moveTo(px(0),y); cx.lineTo(px(1),y); cx.stroke();
+    if(i%2===0){
+      cx.textAlign='center'; cx.fillText((i*10)+'%',x,H-8);
+      cx.textAlign='right'; cx.fillText((i*10)+'%',PAD.l-5,y+4);
+    }
+  }
+  cx.strokeStyle='#33404f'; cx.strokeRect(px(0),py(1),px(1)-px(0),py(0)-py(1));
+  cx.fillStyle='#8c97a8'; cx.textAlign='left'; cx.fillText('B',px(0)+4,py(1)+12); cx.fillText('A',px(0)+4,py(0)-5);
+  // krzywa
+  const P=S.pts;
+  cx.strokeStyle='#4da3ff'; cx.lineWidth=3; cx.lineJoin='round'; cx.beginPath();
+  for(let i=0;i<=400;i++){const t=i/400, y=yAt(P,t); i?cx.lineTo(px(t),py(y)):cx.moveTo(px(t),py(y));}
+  cx.stroke();
+  // uchwyty wybranego punktu
+  const s=S.sel;
+  if(s>=0&&s<P.length){
+    const p=P[s]; cx.lineWidth=1.5; cx.strokeStyle='#ffb020'; cx.fillStyle='#ffb020';
+    const hs=[];
+    if(s>0) hs.push({x:p.t-p.hi.dx,y:p.y-p.hi.dy});
+    if(s<P.length-1) hs.push({x:p.t+p.ho.dx,y:p.y+p.ho.dy});
+    hs.forEach(h=>{
+      cx.beginPath(); cx.moveTo(px(p.t),py(p.y)); cx.lineTo(px(h.x),py(h.y)); cx.stroke();
+      cx.fillRect(px(h.x)-8,py(h.y)-8,16,16);
+    });
+  }
+  // punkty
+  P.forEach((p,i)=>{
+    cx.beginPath(); cx.arc(px(p.t),py(p.y),i===S.sel?11:8,0,7);
+    cx.fillStyle=i===S.sel?'#ffffff':'#4da3ff'; cx.fill();
+    cx.lineWidth=2; cx.strokeStyle='#0e1116'; cx.stroke();
+  });
+  // znacznik pozycji urządzenia (pozioma linia) i czasu (pionowa)
+  cx.strokeStyle='rgba(62,207,142,.8)'; cx.lineWidth=1.5; cx.setLineDash([6,5]);
+  const yy=py(clamp(S.pos,0,1)); cx.beginPath(); cx.moveTo(px(0),yy); cx.lineTo(px(1),yy); cx.stroke();
+  if(S.state==='RUN'){
+    const rt=S.mode==='sim'?clamp((performance.now()-Sim.cstart)/1000/(Sim.curve?Sim.curve.dur:S.dur),0,1):clamp((performance.now()-S.runStart)/1000/S.dur,0,1);
+    cx.beginPath(); cx.moveTo(px(rt),py(0)); cx.lineTo(px(rt),py(1)); cx.stroke();
+  }
+  cx.setLineDash([]);
+  $('#cinfo').textContent=P.length+' pkt.';
+}
+
+function hit(e){
+  const r=cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, P=S.pts, R=24;
+  const s=S.sel;
+  if(s>=0&&s<P.length){
+    const p=P[s];
+    if(s>0){const hx=px(p.t-p.hi.dx),hy=py(p.y-p.hi.dy); if(Math.hypot(x-hx,y-hy)<R) return {k:'hi',i:s};}
+    if(s<P.length-1){const hx=px(p.t+p.ho.dx),hy=py(p.y+p.ho.dy); if(Math.hypot(x-hx,y-hy)<R) return {k:'ho',i:s};}
+  }
+  let best=-1,bd=R;
+  P.forEach((p,i)=>{const d=Math.hypot(x-px(p.t),y-py(p.y)); if(d<bd){bd=d;best=i}});
+  if(best>=0) return {k:'pt',i:best};
+  return {k:'none',x,y};
+}
+cv.addEventListener('pointerdown',e=>{
+  cv.setPointerCapture(e.pointerId);
+  const h=hit(e);
+  if(h.k==='none'){
+    const t=clamp(ux(h.x),0.02,0.98), y=clamp(uy(h.y),0,1), P=S.pts;
+    let i=P.findIndex(p=>p.t>t); if(i<0) i=P.length;
+    if(Math.abs(P[i-1].t-t)<0.02||Math.abs(P[i].t-t)<0.02){return}
+    const prev=P[i-1],next=P[i];
+    const np=mkPt(t,y,(t-prev.t)/3,(next.t-t)/3);
+    P.splice(i,0,np); S.sel=i; clampAll(); drag={k:'pt',i}; draw(); return;
+  }
+  S.sel=h.i; drag=h; draw();
+});
+cv.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  const r=cv.getBoundingClientRect(), t=ux(e.clientX-r.left), y=clamp(uy(e.clientY-r.top),0,1), P=S.pts, i=drag.i, p=P[i];
+  if(drag.k==='pt'){
+    p.y=y;
+    if(i>0&&i<P.length-1) p.t=clamp(t,P[i-1].t+0.01,P[i+1].t-0.01);
+    clampAll();
+  } else if(drag.k==='ho'){
+    p.ho.dx=Math.max(0,t-p.t); p.ho.dy=y-p.y;
+    if(S.mirror&&i>0){p.hi.dx=p.ho.dx;p.hi.dy=p.ho.dy}
+    clampHandles(i);
+    if(S.mirror&&i>0){ // wyrównaj po przycięciu
+      const m=Math.min(p.hi.dx,p.ho.dx); p.hi.dx=p.ho.dx=m; const d=Math.abs(p.hi.dy)<Math.abs(p.ho.dy)?p.hi.dy:p.ho.dy; p.hi.dy=p.ho.dy=d;
+    }
+  } else if(drag.k==='hi'){
+    p.hi.dx=Math.max(0,p.t-t); p.hi.dy=p.y-y;
+    if(S.mirror&&i<P.length-1){p.ho.dx=p.hi.dx;p.ho.dy=p.hi.dy}
+    clampHandles(i);
+    if(S.mirror&&i<P.length-1){
+      const m=Math.min(p.hi.dx,p.ho.dx); p.hi.dx=p.ho.dx=m; const d=Math.abs(p.hi.dy)<Math.abs(p.ho.dy)?p.hi.dy:p.ho.dy; p.hi.dy=p.ho.dy=d;
+    }
+  }
+  draw();
+});
+['pointerup','pointercancel'].forEach(n=>cv.addEventListener(n,()=>{if(drag){drag=null;persist()}}));
+
+$('#btnDel').addEventListener('click',()=>{
+  if(S.sel>0&&S.sel<S.pts.length-1){S.pts.splice(S.sel,1);S.sel=Math.min(S.sel,S.pts.length-1);clampAll();draw();persist()}
+});
+$('#btnMirror').addEventListener('click',e=>{S.mirror=!S.mirror;e.target.classList.toggle('on',S.mirror)});
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{S.pts=presetPts(b.dataset.preset);S.sel=1;clampAll();draw();persist()}));
+$('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,1,3600);e.target.value=S.dur;persist()});
+$('#btnFs').addEventListener('click',()=>{
+  const ed=$('#editor'); ed.classList.toggle('fs');
+  $('#btnFs').textContent=ed.classList.contains('fs')?'Zamknij pełny ekran':'Pełny ekran';
+  setTimeout(()=>{resize();draw()},50);
+});
+
+/* ---- wysyłanie / start ---- */
+const pm=v=>Math.round(v*1000);
+async function uploadCurve(){
+  const P=S.pts; clampAll();
+  sendLine('CURVE BEGIN '+Math.round(S.dur*1000)+' '+P.length);
+  for(let i=0;i<P.length;i++){
+    const p=P[i];
+    sendLine('K '+i+' '+[pm(p.t),pm(p.y),pm(p.hi.dx),pm(p.hi.dy),pm(p.ho.dx),pm(p.ho.dy)].join(' '));
+    await sleep(S.mode==='ble'?120:0);
+  }
+  sendLine('CURVE END');
+}
+$('#btnSend').addEventListener('click',async()=>{
+  if(S.mode==='ble'&&!S.connected){alert('Najpierw połącz się z Kawaletem.');return}
+  if(S.mode==='ble'&&!confirm('Wysłać krzywą ('+S.pts.length+' pkt., '+S.dur+' s) do Kawaleta?\n(Silnik się jeszcze nie ruszy.)')) return;
+  await uploadCurve();
+});
+$('#btnRun').addEventListener('click',async()=>{
+  if(S.mode==='ble'&&!S.connected){alert('Najpierw połącz się z Kawaletem.');return}
+  if(S.mode==='ble'&&!confirm('START: silnik ruszy po krzywej.\nSprawdź, czy nic nie stoi na stole i że masz pod ręką STOP.')) return;
+  await uploadCurve();
+  await sleep(S.mode==='ble'?200:60);
+  S.runStart=performance.now(); sendLine('CURVE RUN');   // stan zmieni się dopiero po odpowiedzi/statusie z Kawaleta
+});
+$('#btnAbort').addEventListener('click',()=>{sendLine('CURVE ABORT');sendLine('STOP')});
+
+/* ---- zapisane krzywe ---- */
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+function persist(){store('kawalet.last',{pts:S.pts,dur:S.dur})}
+function refreshList(){
+  const sel=$('#selLoad'), saved=store('kawalet.saved')||{};
+  sel.innerHTML='<option value="">Wczytaj…</option>'+Object.keys(saved).map(n=>'<option>'+n.replace(/</g,'&lt;')+'</option>').join('');
+}
+$('#btnSave').addEventListener('click',()=>{
+  const n=prompt('Nazwa krzywej:'); if(!n) return;
+  const saved=store('kawalet.saved')||{}; saved[n]={pts:S.pts,dur:S.dur}; store('kawalet.saved',saved); refreshList();
+});
+$('#selLoad').addEventListener('change',e=>{
+  const saved=store('kawalet.saved')||{}, s=saved[e.target.value];
+  if(s){S.pts=JSON.parse(JSON.stringify(s.pts));S.dur=s.dur;$('#dur').value=S.dur;S.sel=1;draw()}
+  e.target.value='';
+});
+
+/* ========================= START ========================= */
+(function init(){
+  const last=store('kawalet.last');
+  if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
+  clampAll(); refreshList(); renderStatus();
+  log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
+})();
+</script>
+</body>
+</html>
