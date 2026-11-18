@@ -154,6 +154,8 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button id="btnExp">Eksport</button>
       <button id="btnImp">Import</button>
       <button id="btnLnk">Link</button>
+      <button id="btnCUp" title="Wyślij krzywe do chmury">☁ Wyślij</button>
+      <button id="btnCDn" title="Pobierz krzywe z chmury">☁ Pobierz</button>
       <input id="fileImp" type="file" accept=".json,application/json,text/plain" style="display:none">
     </div>
     <div class="row">
@@ -164,6 +166,12 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <span class="small" id="cinfo"></span>
     </div>
     <div id="cwrap"><canvas id="cv"></canvas></div>
+    <div class="row" id="scrubRow">
+      <label style="flex:0 0 auto">Czas</label>
+      <input id="scrub" type="range" min="0" max="100" step="0.5" value="0" style="flex:1;min-width:120px">
+      <b id="scrubv" class="small" style="min-width:150px;text-align:right;color:var(--text)"></b>
+    </div>
+    <label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="scrubGo" checked> Stół jedzie za suwakiem (do pozycji krzywej w tej chwili)</label>
     <div class="row">
       <button id="btnSend" class="acc" style="flex:1">Wyślij do Kawaleta</button>
       <button id="btnRun" class="ok" style="flex:1">Start</button>
@@ -326,7 +334,7 @@ function onLine(l){
   const w=l.split(/\s+/);
   if(w[0]==='ST'){ S.pos=(+w[1])/1000; S.state=w[2]||S.state; if(w[3]) S.spdDev=+w[3]; renderStatus(); drawSoon(); return; }
   log('← '+l);
-  if(w[0]==='ERR'){ if(l.indexOf('CURVE RUN')>=0){ S.state='IDLE'; renderStatus(); alert('Kawalet: ruch po krzywej nie jest jeszcze włączony w programie Teensy (krzywa została odebrana i sprawdzona).'); } else if(l.indexOf('NOHOME')>=0){ alert('Kawalet wymaga najpierw HOME.'); } else if(l.indexOf('ESTOP')>=0){ alert('Kawalet jest w stanie E-STOP. Zdejmij go przyciskiem HOME na urządzeniu.'); } }
+  if(w[0]==='ERR'){ if(l.indexOf('CURVE RUN')>=0){ S.state='IDLE'; renderStatus(); const R={'START POZA POCZATKIEM':'Stół nie stoi na początku krzywej. Najpierw dojedź do punktu startowego (np. „Idź do A", jeśli krzywa zaczyna się w A).','NOAB':'Ustaw najpierw punkty A i B.','NOHOME':'Najpierw HOME.','RUCH':'Stół jeszcze się porusza. Poczekaj aż stanie.','ESTOP':'E-STOP aktywny.','BRAK KRZYWEJ':'Kawalet nie ma poprawnej krzywej. Wyślij ją jeszcze raz.'}; const k=Object.keys(R).find(x=>l.indexOf(x)>=0); alert('Kawalet nie wystartował: '+(k?R[k]:l)); } else if(l.indexOf('CURVE LAG')>=0){ alert('Krzywa przerwana: stół nie nadąża (za szybka krzywa dla ustawionej prędkości). Wydłuż czas albo podnieś poziom prędkości.'); } else if(l.indexOf('NOHOME')>=0){ alert('Kawalet wymaga najpierw HOME.'); } else if(l.indexOf('ESTOP')>=0){ alert('Kawalet jest w stanie E-STOP. Zdejmij go przyciskiem HOME na urządzeniu.'); } }
 }
 
 /* ========================= SYMULATOR ========================= */
@@ -341,6 +349,7 @@ const Sim={
     else if(c==='JOG'){this.jog=clamp((+w[1]||0)/100,-1,1);this.lastJog=performance.now();if(this.jog!==0){this.target=null;this.curve&&this.state==='RUN'&&(this.state='IDLE')}}
     else if(c==='STOP'||c==='ESTOP'){this.target=null;this.jog=0;if(this.state==='RUN')this.state='IDLE';reply('OK '+c)}
     else if(c==='GOA'){this.target=0;this.state='GOTO';reply('OK GOA')}
+    else if(c==='GOP'){this.target=clamp((+w[1]||0)/100,0,1);this.state='GOTO';reply('OK GOP')}
     else if(c==='GOB'){this.target=1;this.state='GOTO';reply('OK GOB')}
     else if(c==='HOME'){this.target=0;this.state='HOME';reply('MSG SYM: homing')}
     else if(c==='SETA'){reply('MSG SYM: A zapisane')}
@@ -493,6 +502,9 @@ function draw(){
     cx.fillStyle=i===S.sel?K('--text'):K('--acc'); cx.fill();
     cx.lineWidth=2; cx.strokeStyle=K('--inset'); cx.stroke();
   });
+  // suwak (głowica) – pionowa linia w wybranej chwili
+  { const hx=px(S.scrub||0), hy=py(yAt(P,S.scrub||0)); cx.save(); cx.strokeStyle=K('--text'); cx.lineWidth=2; cx.setLineDash([]); cx.beginPath(); cx.moveTo(hx,py(0)); cx.lineTo(hx,py(1)); cx.stroke();
+    cx.fillStyle=K('--text'); cx.beginPath(); cx.arc(hx,hy,6,0,7); cx.fill(); cx.restore(); }
   // znacznik pozycji urządzenia (pozioma linia) i czasu (pionowa)
   cx.strokeStyle=K('--ok'); cx.lineWidth=1.5; cx.setLineDash([6,5]);
   const yy=py(clamp(S.pos,0,1)); cx.beginPath(); cx.moveTo(px(0),yy); cx.lineTo(px(1),yy); cx.stroke();
@@ -575,6 +587,18 @@ $('#btnDel').addEventListener('click',()=>{
 });
 $('#btnMirror').addEventListener('click',e=>{S.mirror=!S.mirror;e.target.classList.toggle('on',S.mirror)});
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{histPush(snap(),true);S.pts=presetPts(b.dataset.preset);S.sel=1;clampAll();draw();persist()}));
+/* ---- suwak czasu (podgląd i jazda stołu) ---- */
+let scrubLast=0;
+function scrubUpdate(send){
+  const t=(+$('#scrub').value)/100; S.scrub=t; const y=yAt(S.pts,t);
+  $('#scrubv').textContent=Math.round(t*100)+'% czasu · '+(Math.round(t*S.dur*10)/10)+' s · droga '+Math.round(y*100)+'%'+(S.span?' ('+Math.round(y*S.span*10)/10+'°)':'');
+  draw();
+  if($('#scrubGo').checked&&send){
+    const now=performance.now(); if(send==='final'||now-scrubLast>150){scrubLast=now;sendLine('GOP '+(Math.round(clamp(y,0,1)*1000)/10),true)}
+  }
+}
+$('#scrub').addEventListener('input',()=>scrubUpdate(true));
+$('#scrub').addEventListener('change',()=>scrubUpdate('final'));
 $('#span').addEventListener('change',e=>{S.span=clamp(+e.target.value||0,0,3600);e.target.value=S.span||'';store('kawalet.span',S.span);draw()});
 $('#dur').addEventListener('change',e=>{S.dur=clamp(+e.target.value||10,1,3600);e.target.value=S.dur;persist()});
 $('#btnFs').addEventListener('click',()=>{
@@ -666,6 +690,36 @@ $('#btnLnk').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(u);log('Link do krzywej skopiowany – wklej go na drugim urządzeniu w Bluefy/Chrome')}catch(e){prompt('Skopiuj link do krzywej:',u)}
 });
 
+/* ========================= CHMURA (Cloudflare Worker) ========================= */
+const CLOUD_URL='https://kawalet.mraczynski1337.workers.dev';
+function cloudKey(){
+  let k=store('kawalet.cloudKey');
+  if(!k){ k=prompt('Hasło do chmury Kawalet (zapamiętane tylko na tym urządzeniu):'); if(!k) return null; store('kawalet.cloudKey',k.trim()); k=k.trim(); }
+  return k;
+}
+async function cloudFetch(method,body){
+  const k=cloudKey(); if(!k) throw new Error('brak hasła');
+  const r=await fetch(CLOUD_URL,{method,headers:Object.assign({'X-Kawalet-Key':k},body?{'Content-Type':'application/json'}:{}),body});
+  if(r.status===401){ store('kawalet.cloudKey',''); throw new Error('złe hasło (wpisz ponownie przy następnej próbie)'); }
+  if(!r.ok) throw new Error('błąd serwera '+r.status);
+  return r;
+}
+$('#btnCUp').addEventListener('click',async()=>{
+  try{
+    const bundle={app:'kawalet',v:1,curves:Object.assign({},store('kawalet.saved')||{},{'(bieżąca)':curveObj()})};
+    if(!confirm('Wysłać do chmury '+Object.keys(bundle.curves).length+' krzywych? (zastąpi to, co jest w chmurze)')) return;
+    await cloudFetch('PUT',JSON.stringify(bundle)); log('Chmura: wysłano '+Object.keys(bundle.curves).length+' krzywych');
+  }catch(e){ alert('Chmura: '+e.message); }
+});
+$('#btnCDn').addEventListener('click',async()=>{
+  try{
+    const o=await (await cloudFetch('GET')).json(), cur=o.curves||{}; const saved=store('kawalet.saved')||{}; let n=0;
+    for(const k of Object.keys(cur)){ if(validCurve(cur[k])){ const name=(k==='(bieżąca)')?'(bieżąca z chmury)':k; saved[name]={pts:cur[k].pts,dur:cur[k].dur}; n++; } }
+    store('kawalet.saved',saved); refreshList(); log('Chmura: pobrano '+n+' krzywych (lista „Wczytaj…")');
+    if(!n) alert('W chmurze nie ma jeszcze krzywych.');
+  }catch(e){ alert('Chmura: '+e.message); }
+});
+
 /* ========================= MOTYWY ========================= */
 const THEMES=[['noc','Szkło'],['jasny','Jasny'],['warsztat','Warsztat'],['morski','Morski']];
 function setTheme(i){
@@ -681,6 +735,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
+  scrubUpdate(false);
   const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
   clampAll(); refreshList(); renderStatus();
   { const t=store('kawalet.theme'); setTheme(typeof t==='number'?t:0); }
