@@ -137,9 +137,11 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <button id="btnMelStop" class="stop" style="flex:1;min-width:80px">■ Stop</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <select id="melOct" style="width:100%;min-height:46px;margin-bottom:8px" title="Wysokość dźwięku">
-        <option value="0" selected>Wysokość: normalna</option>
-        <option value="-1">Wysokość: oktawę niżej</option>
+      <select id="melOct" style="width:100%;min-height:46px;margin-bottom:8px" title="Wysokość dźwięku (przesunięcie w półtonach)">
+        <option value="-13" selected>Wysokość: jak w grze pianina (niska)</option>
+        <option value="-12">Wysokość: oktawę niżej</option>
+        <option value="-1">Wysokość: półtonu niżej</option>
+        <option value="0">Wysokość: wysoka (cis4)</option>
       </select>
       <select id="melAmp" style="width:100%;min-height:46px" title="Siła dźwięku (amplituda drgań silnika)">
         <option value="16">Dźwięk: średni</option>
@@ -247,7 +249,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 "use strict";
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const PAGE_VERSION='19.11 noc, b14';
+const PAGE_VERSION='19.11 noc, b15';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -941,7 +943,7 @@ $('#btnMelPlay').addEventListener('click',()=>{
   try{store('kawalet.melOct',$('#melOct').value)}catch(e){}
   sendLine('MEL PLAY '+$('#melAmp').value+' '+$('#melOct').value);
 });
-(function(){ const o=store('kawalet.melOct'); if(o) $('#melOct').value=o; })();
+(function(){ const o=store('kawalet.melOct'); if(o){ $('#melOct').value=o; if($('#melOct').value!==String(o)) $('#melOct').value='-13'; } })();
 (function(){ const a=store('kawalet.melAmp'); if(a){ $('#melAmp').value=a; if($('#melAmp').value!==String(a)) $('#melAmp').value='48'; } })();
 
 /* ========================= MOTYWY ========================= */
