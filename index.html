@@ -185,14 +185,25 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
       <span class="small" style="margin-left:auto">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></span>
     </div>
     <div class="row">
+      <label style="flex:0 0 auto;min-width:130px">Czas: <b id="durv">10</b> s</label>
+      <input id="durSl" type="range" min="1" max="120" step="0.5" value="10" style="flex:1;min-width:120px">
+    </div>
+    <div class="row">
       <label style="flex:0 0 auto;min-width:130px">Tempo: <b id="tempov">100</b>% → <b id="tdurv">10</b> s</label>
       <input id="tempo" type="range" min="25" max="400" step="5" value="100" style="flex:1;min-width:120px">
     </div>
-    <div class="row">
-      <label style="flex:0 0 auto">Droga A→B [kroki]</label>
-      <input id="spanSteps" type="number" min="0" step="100" placeholder="z Kawaleta" style="width:120px">
-      <span class="small" id="spanSrc"></span>
+    <div class="row" style="gap:6px">
+      <button id="modeAB" class="on" style="padding:8px 12px;min-height:40px;font-size:14px">Między A i B</button>
+      <button id="modeRel" style="padding:8px 12px;min-height:40px;font-size:14px">Od teraz o N obrotów</button>
     </div>
+    <div class="row">
+      <label style="flex:0 0 auto">Droga [obroty]</label>
+      <input id="revs" type="number" min="0" step="0.25" placeholder="np. 2" style="width:90px">
+      <button id="dirBtn" style="padding:8px 14px;min-height:40px;font-size:18px;display:none" title="Kierunek: → w stronę B (jak pad w prawo), ← w stronę A">→</button>
+      <label style="flex:0 0 auto">Kroków na obrót</label>
+      <input id="spr" type="number" min="1" step="1" placeholder="z Kawaleta" style="width:100px">
+    </div>
+    <div class="small" id="spanInfo"></div>
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
     <div class="row" id="scrubRow">
       <label style="flex:0 0 auto">Czas</label>
@@ -361,10 +372,10 @@ function onLine(l){
   if(!l) return;
   const w=l.split(/\s+/);
   if(w[0]==='ST'){ S.pos=(+w[1])/1000; S.state=w[2]||S.state; if(w[3]) S.spdDev=+w[3]; renderStatus(); drawSoon(); return; }
-  if(w[0]==='INFO'){ if(+w[2]){ S.spanSteps=+w[1]; $('#spanSteps').value=S.spanSteps; $('#spanSrc').textContent='(z Kawaleta)'; drawSoon(); } return; }
+  if(w[0]==='INFO'){ S.abSteps=(+w[2])?+w[1]:0; if(+w[3]) S.spr=+w[3]; updateSpanUI(); drawSoon(); return; }
   log('← '+l);
   if(l.indexOf('OK SETA')===0||l.indexOf('OK SETB')===0||l.indexOf('OK HOME')===0) setTimeout(()=>sendLine('INFO',true),400);
-  if(w[0]==='ERR'){ if(l.indexOf('CURVE RUN')>=0){ S.state='IDLE'; renderStatus(); const R={'START POZA POCZATKIEM':'Stół nie stoi na początku krzywej. Najpierw dojedź do punktu startowego (np. „Idź do A", jeśli krzywa zaczyna się w A).','NOAB':'Ustaw najpierw punkty A i B.','NOHOME':'Najpierw HOME.','RUCH':'Stół jeszcze się porusza. Poczekaj aż stanie.','ESTOP':'E-STOP aktywny.','BRAK KRZYWEJ':'Kawalet nie ma poprawnej krzywej. Wyślij ją jeszcze raz.'}; const k=Object.keys(R).find(x=>l.indexOf(x)>=0); alert('Kawalet nie wystartował: '+(k?R[k]:l)); } else if(l.indexOf('CURVE LAG')>=0){ alert('Krzywa przerwana: stół nie nadąża (za szybka krzywa dla ustawionej prędkości). Wydłuż czas albo podnieś poziom prędkości.'); } else if(l.indexOf('NOHOME')>=0){ alert('Kawalet wymaga najpierw HOME.'); } else if(l.indexOf('ESTOP')>=0){ alert('Kawalet jest w stanie E-STOP. Zdejmij go przyciskiem HOME na urządzeniu.'); } }
+  if(w[0]==='ERR'){ if(l.indexOf('CURVE RUN')>=0){ S.state='IDLE'; renderStatus(); const R={'START POZA POCZATKIEM':'Stół nie stoi na początku krzywej. Najpierw dojedź do punktu startowego (np. „Idź do A", jeśli krzywa zaczyna się w A).','NOAB':'Ustaw najpierw punkty A i B.','NOHOME':'Najpierw HOME.','RUCH':'Stół jeszcze się porusza. Poczekaj aż stanie.','DROGA':'Droga jest za krótka (poniżej 100 kroków) albo za długa.','ESTOP':'E-STOP aktywny.','BRAK KRZYWEJ':'Kawalet nie ma poprawnej krzywej. Wyślij ją jeszcze raz.'}; const k=Object.keys(R).find(x=>l.indexOf(x)>=0); alert('Kawalet nie wystartował: '+(k?R[k]:l)); } else if(l.indexOf('CURVE LAG')>=0){ alert('Krzywa przerwana: stół nie nadąża (za szybka krzywa dla ustawionej prędkości). Wydłuż czas albo podnieś poziom prędkości.'); } else if(l.indexOf('NOHOME')>=0){ alert('Kawalet wymaga najpierw HOME.'); } else if(l.indexOf('ESTOP')>=0){ alert('Kawalet jest w stanie E-STOP. Zdejmij go przyciskiem HOME na urządzeniu.'); } }
 }
 
 /* ========================= SYMULATOR ========================= */
@@ -650,7 +661,7 @@ function capacity(){
   return {vmax,vcap,rl,acc,aMax:Math.max(vmax*vmax/(2*acc),3000)};
 }
 function feasibility(){
-  const span=S.spanSteps||0; if(!span) return null;
+  recomputeSpan(); const span=S.spanSteps||0; if(!span) return null;
   const L=curveLimits(), c=capacity(), vReq=L.vm*span, aReq=L.am*span;
   const tv=S.dur*vReq/c.vcap, ta=S.dur*Math.sqrt(aReq/c.aMax), tmin=Math.max(tv,ta);
   return {span,c,vReq,aReq,tv,ta,tmin,ok:S.dur>=tmin*1.1, rec:Math.ceil(tmin*1.15*10)/10};
@@ -664,9 +675,32 @@ function updateFeas(){
   const b=$('#btnFit'); if(b) b.onclick=()=>{S.dur=f.rec;$('#dur').value=S.dur;persist();draw();scrubUpdate(false)};
 }
 /* ---- tempo przejazdu: ta sama krzywa, inny czas ---- */
-function syncTempo(){ if(S.dur!==S._tempoDur){ S.baseDur=S.dur; S.tempo=100; S._tempoDur=S.dur; $('#tempo').value=100; } $('#tempov').textContent=S.tempo; $('#tdurv').textContent=S.dur; }
+function syncTempo(){ $('#durv').textContent=S.dur; if(document.activeElement!==$('#durSl')) $('#durSl').value=Math.min(120,S.dur); if(S.dur!==S._tempoDur){ S.baseDur=S.dur; S.tempo=100; S._tempoDur=S.dur; $('#tempo').value=100; } $('#tempov').textContent=S.tempo; $('#tdurv').textContent=S.dur; }
 $('#tempo').addEventListener('input',e=>{ S.tempo=+e.target.value; S.dur=clamp(Math.round(S.baseDur*100/S.tempo*10)/10,0.5,3600); S._tempoDur=S.dur; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); });
-$('#spanSteps').addEventListener('change',e=>{ S.spanSteps=Math.max(0,Math.round(+e.target.value||0)); store('kawalet.spanSteps',S.spanSteps); $('#spanSrc').textContent='(wpisane ręcznie)'; draw(); });
+/* ---- droga w obrotach: między A i B albo od bieżącej pozycji o N obrotów ---- */
+S.relMode=false; S.relDir=1; S.revs=2; S.spr=0; S.abSteps=0;
+function recomputeSpan(){
+  const spr=S.spr||0;
+  if(S.relMode) S.spanSteps=spr?Math.round(S.revs*spr):0; else S.spanSteps=S.abSteps||(spr&&S.revs?Math.round(S.revs*spr):0);
+}
+function updateSpanUI(){
+  recomputeSpan();
+  $('#modeAB').classList.toggle('on',!S.relMode); $('#modeRel').classList.toggle('on',S.relMode);
+  $('#dirBtn').style.display=S.relMode?'':'none'; $('#dirBtn').textContent=S.relDir>0?'→':'←';
+  const rv=S.relMode?S.revs:(S.abSteps&&S.spr?Math.round(S.abSteps/S.spr*100)/100:S.revs);
+  if(document.activeElement!==$('#revs')) $('#revs').value=rv||'';
+  if(document.activeElement!==$('#spr')) $('#spr').value=S.spr||'';
+  const st=S.spanSteps, f=n=>n.toLocaleString('pl');
+  $('#spanInfo').textContent=(S.relMode?'Od bieżącej pozycji '+(S.relDir>0?'w stronę B (→)':'w stronę A (←)')+': ':(S.abSteps?'Droga A→B z Kawaleta: ':'Droga: '))+(S.spr&&st?(Math.round(st/S.spr*100)/100)+' obr. = ':'')+(st?f(st)+' kroków':'podaj kroki na obrót')+(S.spr?'':'')+'. '+(S.relMode?'Start rusza od miejsca, w którym stół stoi.':'');
+  const g=$('#scrubGo'); if(g){ g.disabled=S.relMode; if(S.relMode) g.checked=false; }
+  store('kawalet.rel',{rel:S.relMode,revs:S.revs,dir:S.relDir,spr:S.spr});
+}
+$('#modeAB').addEventListener('click',()=>{S.relMode=false;updateSpanUI();draw()});
+$('#modeRel').addEventListener('click',()=>{S.relMode=true;updateSpanUI();draw()});
+$('#dirBtn').addEventListener('click',()=>{S.relDir=-S.relDir;updateSpanUI();draw()});
+$('#revs').addEventListener('input',e=>{ const v=+e.target.value; if(v>=0){ if(S.relMode) S.revs=v; else { S.abSteps=0; S.revs=v; } updateSpanUI(); draw(); } });
+$('#spr').addEventListener('input',e=>{ S.spr=Math.max(0,Math.round(+e.target.value||0)); updateSpanUI(); draw(); });
+$('#durSl').addEventListener('input',e=>{ S.dur=+e.target.value; S._tempoDur=null; $('#dur').value=S.dur; persist(); draw(); scrubUpdate(false); });
 /* ---- suwak czasu (podgląd i jazda stołu) ---- */
 let scrubLast=0;
 function scrubUpdate(send){
@@ -709,7 +743,7 @@ $('#btnRun').addEventListener('click',async()=>{
   if(S.mode==='ble'&&!confirm('START: silnik ruszy po krzywej.\nSprawdź, czy nic nie stoi na stole i że masz pod ręką STOP.')) return;
   await uploadCurve();
   await sleep(S.mode==='ble'?200:60);
-  S.runStart=performance.now(); sendLine('CURVE RUN');   // stan zmieni się dopiero po odpowiedzi/statusie z Kawaleta
+  S.runStart=performance.now(); recomputeSpan(); sendLine(S.relMode?('CURVE RUN REL '+(S.relDir*S.spanSteps)):'CURVE RUN');   // stan zmieni się dopiero po odpowiedzi/statusie z Kawaleta
 });
 $('#btnAbort').addEventListener('click',()=>{sendLine('CURVE ABORT');sendLine('STOP')});
 
@@ -815,7 +849,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   const last=store('kawalet.last');
   if(last&&last.pts&&last.pts.length>=2){S.pts=last.pts;S.dur=last.dur||10;$('#dur').value=S.dur}
   { const sp=store('kawalet.span'); if(sp>0){S.span=sp;$('#span').value=sp} }
-  { const ss=store('kawalet.spanSteps'); if(ss>0){S.spanSteps=ss;$('#spanSteps').value=ss;$('#spanSrc').textContent='(zapamiętane)'} }
+  { const r=store('kawalet.rel'); if(r){S.relMode=!!r.rel;S.revs=+r.revs||2;S.relDir=r.dir<0?-1:1;S.spr=+r.spr||0} updateSpanUI(); }
   scrubUpdate(false);
   const hc=decodeHash(); if(hc&&validCurve(hc)){ history.replaceState(null,'',location.pathname); if(confirm('Wczytać krzywą z linku? (zastąpi bieżącą)')){S.curPreset=null;S.pts=hc.pts;S.dur=clamp(+hc.dur||10,1,3600);$('#dur').value=S.dur;persist()} }
   clampAll(); refreshList(); renderStatus(); markPreset();
