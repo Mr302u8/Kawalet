@@ -226,6 +226,15 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 #runRow button .ic{width:16px;height:16px}
 #feas{font-size:12px!important;line-height:1.35;padding:6px 8px!important}
 #ptPanel>summary{font-size:13px!important;min-height:24px!important}
+.ptlay{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px;align-items:start}
+.ptside{display:flex;flex-direction:column;gap:5px}
+.ptside button{width:100%}
+.modegrid{grid-template-columns:repeat(3,1fr)!important}
+.modebtn{min-height:44px!important;padding:4px 2px!important;gap:2px!important}
+.modebtn .ic{width:18px!important;height:18px!important}
+.modedesc{font-size:12px;line-height:1.3;margin-top:6px}
+.holdin{float:right;display:inline-flex;gap:4px;align-items:center;font-size:12px;margin-left:6px}
+.holdin input{width:64px!important;min-height:28px!important;padding:2px 6px!important}
 </style>
 </head>
 <body>
@@ -361,9 +370,13 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
       </div>
     </div>
 
-    <details id="ptPanel" class="card dcard">
+    <details id="ptPanel" class="card dcard" open>
       <summary data-ico="smooth" id="ptSum">Punkt: przejście i pozycja</summary>
-      <div class="dbody" id="ptBody"></div>
+      <div class="dbody ptlay"><div id="ptBody"></div><div class="ptside" id="runRow">
+      <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
+      <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
+      <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
+    </div></div>
     </details>
 
     <div class="qbar">
@@ -373,11 +386,7 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
       <button data-cmd="GOA" data-ico="gotoA">Do A</button>
       <button data-cmd="GOB" data-ico="gotoB">Do B</button>
     </div>
-    <div class="row" id="runRow">
-      <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
-      <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
-      <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
-    </div>
+    
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
 
     <div class="ctrlgrid">
@@ -498,7 +507,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b35 (Pult)';
+const PAGE_VERSION='19.11, b36 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -1222,8 +1231,7 @@ function renderPtPanel(){
   else{
     h='<div class="small" style="margin-bottom:6px">Jak krzywa ma przechodzić przez ten punkt:</div><div class="modegrid">';
     for(const k of Object.keys(MODES)){ const d=MODES[k]; h+='<button class="modebtn'+(m===k?' on':'')+'" data-mode="'+k+'" title="'+esc(d.n)+'">'+ico(d.ico)+'<span>'+d.s+'</span></button>'; }
-    h+=ALIGN+'</div><div class="modedesc"><b>'+MODES[m].n+'</b><br>'+MODES[m].d+'</div>';
-    if(HOLDMODES.includes(m)) h+='<div class="prow" style="margin:4px 0 8px;grid-template-columns:minmax(0,1fr) 90px"><label>'+'Czas postoju [s]'+'</label><input id="holdSec" type="number" min="0" max="600" step="0.1" value="'+(p.hold>=0?p.hold:1)+'"></div>';
+    h+=ALIGN+'</div><div class="modedesc"><b>'+MODES[m].n+'</b>'+(HOLDMODES.includes(m)?'<span class="holdin">Czas [s] <input id="holdSec" type="number" min="0" max="600" step="0.1" value="'+(p.hold>=0?p.hold:1)+'"></span>':'')+'<br>'+MODES[m].d+'</div>';
   }
   el.innerHTML=h;
 }
