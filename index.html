@@ -212,6 +212,12 @@ html[data-theme="pult"] .modedesc{border-radius:2px;border:2px solid var(--line)
 #repDlg{width:min(92vw,400px)}
 #repDlg::backdrop{background:rgba(0,0,0,.55)}
 html[data-theme="pult"] #repDlg{background:var(--panel)}
+/* b31: zwarte kafelki, mieści się na ekranie iPhone'a */
+.tiles{gap:6px}
+.tile{min-height:54px!important;padding:6px 4px!important;gap:3px!important;font-size:12px!important}
+.tile .ic{width:22px!important;height:22px!important}
+html[data-theme="pult"] .tile{padding-bottom:10px!important;box-shadow:0 2px 0 var(--line),inset 0 -5px 0 var(--t4)!important}
+html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius:28px!important;border-width:3px!important;min-height:54px!important;padding:6px!important}
 </style>
 </head>
 <body>
@@ -483,7 +489,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='20.11, b26 (Pult)';
+const PAGE_VERSION='19.11, b31 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -556,18 +562,24 @@ const LEGACY={linear:'cvel',auto:'smooth',cacc:'smooth',holdprev:'smooth',holdne
 const mdOf=p=>{const m=p.mode||'smooth'; return LEGACY[m]||m;};
 function modeOf(P,i){ if(i<=0||i>=P.length-1) return 'end'; return mdOf(P[i]); }
 const HOLDMODES=['stop'];
-function hasHandles(P,i){ const m=modeOf(P,i); if(m==='end') return mdOf(P[i])!=='cvel'; return m==='smooth'||m==='corner'||m==='flat'; }
+function hasHandles(P,i){ return true; }   // ogonki zawsze widoczne; ciągnięcie ogonka przy 'stałej prędkości' zmienia typ na Ostro/Łagodnie
 function autoHandles(P){   // uchwyty liczone automatycznie: stała prędkość (proste odcinki), przystanek; płasko: dy=0
   const n=P.length; if(n>=2){
     if(mdOf(P[0])==='cvel'){ P[0].ho.dx=(P[1].t-P[0].t)/3; P[0].ho.dy=(P[1].y-P[0].y)/3; }
     if(mdOf(P[n-1])==='cvel'){ P[n-1].hi.dx=(P[n-1].t-P[n-2].t)/3; P[n-1].hi.dy=(P[n-1].y-P[n-2].y)/3; }
+  }
+  for(let i=0;i<P.length;i++){   // odcinek przy punkcie 'stała prędkość' jest prosty: prostujemy też uchwyt sąsiada
+    if(mdOf(P[i])!=='cvel') continue;
+    [[i-1,'ho',i],[i+1,'hi',i]].forEach(([j,h])=>{ if(j<0||j>=P.length) return; const q=P[j], mj=mdOf(q); if(mj==='flat'||mj==='stop'||mj==='cvel') return;
+      const a=Math.min(i,j), b=Math.max(i,j), g=(P[b].t-P[a].t)/3, sl=(P[b].y-P[a].y)/(P[b].t-P[a].t);
+      q[h].dx=g; q[h].dy=sl*g; });
   }
   for(let i=1;i<P.length-1;i++){
     const p=P[i], m=mdOf(p), gp=p.t-P[i-1].t, gn=P[i+1].t-p.t;
     if(m==='cvel'){
       p.hi.dx=gp/3; p.hi.dy=(p.y-P[i-1].y)/3; p.ho.dx=gn/3; p.ho.dy=(P[i+1].y-p.y)/3;
     } else if(m==='stop'){
-      p.hi.dx=gp/3; p.hi.dy=0; p.ho.dx=gn/3; p.ho.dy=0;
+      p.hi.dy=0; p.ho.dy=0; if(!(p.hi.dx>0.001)) p.hi.dx=gp/3; if(!(p.ho.dx>0.001)) p.ho.dx=gn/3;
     } else if(m==='flat'){
       p.hi.dy=0; p.ho.dy=0; if(!(p.hi.dx>0.001)) p.hi.dx=gp/3; if(!(p.ho.dx>0.001)) p.ho.dx=gn/3;
     }
@@ -963,14 +975,16 @@ cv.addEventListener('pointermove',e=>{
     if(i>0&&i<P.length-1) p.t=clamp(t,P[i-1].t+0.01,P[i+1].t-0.01);
     clampAll();
   } else if(drag.k==='ho'){
+    if(mdOf(p)==='cvel'){ p.mode=(i>0&&i<P.length-1)?'corner':'flat'; S._ptSig=''; renderPtPanel(); }
     const m=modeOf(P,i), mir=(m==='smooth'&&i>0&&i<P.length-1);
-    p.ho.dx=Math.max(0,t-p.t); p.ho.dy=(m==='flat')?0:y-p.y;
+    p.ho.dx=Math.max(0,t-p.t); p.ho.dy=(m==='flat'||m==='stop')?0:y-p.y;
     if(mir){p.hi.dx=p.ho.dx;p.hi.dy=p.ho.dy}
     clampHandles(i);
     if(mir){ const mm=Math.min(p.hi.dx,p.ho.dx); p.hi.dx=p.ho.dx=mm; const d=Math.abs(p.hi.dy)<Math.abs(p.ho.dy)?p.hi.dy:p.ho.dy; p.hi.dy=p.ho.dy=d; }
   } else if(drag.k==='hi'){
+    if(mdOf(p)==='cvel'){ p.mode=(i>0&&i<P.length-1)?'corner':'flat'; S._ptSig=''; renderPtPanel(); }
     const m=modeOf(P,i), mir=(m==='smooth'&&i>0&&i<P.length-1);
-    p.hi.dx=Math.max(0,p.t-t); p.hi.dy=(m==='flat')?0:p.y-y;
+    p.hi.dx=Math.max(0,p.t-t); p.hi.dy=(m==='flat'||m==='stop')?0:p.y-y;
     if(mir){p.ho.dx=p.hi.dx;p.ho.dy=p.hi.dy}
     clampHandles(i);
     if(mir){ const mm=Math.min(p.hi.dx,p.ho.dx); p.hi.dx=p.ho.dx=mm; const d=Math.abs(p.hi.dy)<Math.abs(p.ho.dy)?p.hi.dy:p.ho.dy; p.hi.dy=p.ho.dy=d; }
@@ -1176,6 +1190,11 @@ function setMode(i,m){
   const P=S.pts, p=P[i]; if(!p) return; const isEnd=(i===0||i===P.length-1); if(isEnd&&m!=='flat'&&m!=='cvel') return;
   histPush(snap(),true); const was=mdOf(p); p.mode=m;
   if(m==='stop'&&(!(p.hold>0)||was!=='stop')) p.hold=1;
+  if(!isEnd&&(m==='smooth'||m==='corner')){   // kliknięcie od razu przekształca kształt przy punkcie
+    const pr=P[i-1], nx=P[i+1], gp=p.t-pr.t, gn=nx.t-p.t;
+    if(m==='smooth'){ const sl=(nx.y-pr.y)/(nx.t-pr.t), d=Math.min(gp,gn)/2.5; p.hi.dx=d; p.ho.dx=d; p.hi.dy=sl*d; p.ho.dy=sl*d; }
+    else { p.hi.dx=gp*0.55; p.hi.dy=(p.y-pr.y)*0.55; p.ho.dx=gn*0.55; p.ho.dy=(nx.y-p.y)*0.55; }
+  }
   if(m==='flat'||m==='stop'){ p.hi.dy=0; p.ho.dy=0; if(isEnd){ const g=(i===0?P[1].t-P[0].t:P[i].t-P[i-1].t)/3; if(i===0) p.ho.dx=g; else p.hi.dx=g; } }
   clampAll(); persist(); draw(); scrubUpdate(false);
 }
