@@ -218,6 +218,14 @@ html[data-theme="pult"] #repDlg{background:var(--panel)}
 .tile .ic{width:22px!important;height:22px!important}
 html[data-theme="pult"] .tile{padding-bottom:10px!important;box-shadow:0 2px 0 var(--line),inset 0 -5px 0 var(--t4)!important}
 html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius:28px!important;border-width:3px!important;min-height:54px!important;padding:6px!important}
+/* b32: upakowanie edytora krzywej */
+.qbar{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.qbar button{min-height:36px!important;padding:4px 2px!important;font-size:11px!important;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.1;letter-spacing:0!important}
+.qbar button .ic{width:16px!important;height:16px!important;margin:0!important}
+#runRow button{min-height:36px!important;padding:4px 6px!important;font-size:12px!important}
+#runRow button .ic{width:16px;height:16px}
+#feas{font-size:12px!important;line-height:1.35;padding:6px 8px!important}
+#ptPanel>summary{font-size:13px!important;min-height:24px!important}
 </style>
 </head>
 <body>
@@ -358,7 +366,14 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
       <div class="dbody" id="ptBody"></div>
     </details>
 
-    <div class="row">
+    <div class="qbar">
+      <button data-cmd="HOME" data-ico="home">HOME</button>
+      <button data-cmd="SETA" data-ico="pinA">Ust. A</button>
+      <button data-cmd="SETB" data-ico="pinB">Ust. B</button>
+      <button data-cmd="GOA" data-ico="gotoA">Do A</button>
+      <button data-cmd="GOB" data-ico="gotoB">Do B</button>
+    </div>
+    <div class="row" id="runRow">
       <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
       <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
       <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
@@ -389,13 +404,7 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 
       <div class="posbox">
         <div class="jogpad" style="height:96px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
-        <div class="posbtns">
-          <button class="tile sm t-beige" data-cmd="HOME" data-ico="home">HOME</button>
-          <button class="tile sm t-teal" data-cmd="SETA" data-ico="pinA">Ustaw A</button>
-          <button class="tile sm t-teal" data-cmd="SETB" data-ico="pinB">Ustaw B</button>
-          <button class="tile sm t-orange" data-cmd="GOA" data-ico="gotoA">Do A</button>
-          <button class="tile sm t-orange" data-cmd="GOB" data-ico="gotoB">Do B</button>
-        </div>
+        
         <div class="small">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></div>
       </div>
     </div>
@@ -489,7 +498,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b31 (Pult)';
+const PAGE_VERSION='19.11, b34 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -553,14 +562,12 @@ function clampHandles(i){
 /* ---- typy przejścia przez punkt (jak w robotach i edytorach animacji): gładko / auto / płasko / ostro / liniowo / przystanek ---- */
 const MODES={
   smooth:{n:'Gładko',s:'Gładko',ico:'smooth',d:'Gładko: krzywa przechodzi przez punkt płynnie, bez załamania. Uchwyty są symetryczne: ruszasz jeden, drugi porusza się lustrzanie.'},
-  flat:{n:'Płasko (zatrzymanie)',s:'Płasko',ico:'flat',d:'Płaski moment: w tym punkcie prędkość spada do zera i rusza płynnie dalej. Krzywa wchodzi i wychodzi poziomo (miękkie zatrzymanie, bez czekania).'},
   corner:{n:'Ostro',s:'Ostro',ico:'corner',d:'Ostry róg: uchwyty są niezależne, więc prędkość może zmienić się skokowo (np. szybkie odbicie w drugą stronę).'},
-  cvel:{n:'Stała prędkość',s:'Stała pręd.',ico:'cvel',d:'Stała prędkość: proste odcinki do sąsiednich punktów, ruch ze stałą prędkością. Dobre do jazdy w pętli tam i z powrotem: w punkcie następuje zawrócenie bez zwalniania i bez wygładzania.'},
   stop:{n:'Przystanek',s:'Przystanek',ico:'pause',d:'Przystanek: stół zatrzymuje się w tym punkcie na ustawiony czas, potem rusza dalej (jak punkt „fine" w robocie).'}
 };
 const LEGACY={linear:'cvel',auto:'smooth',cacc:'smooth',holdprev:'smooth',holdnext:'smooth'};   // typy z wcześniejszych wersji (zapisane krzywe) są przeliczane na obecne
 const mdOf=p=>{const m=p.mode||'smooth'; return LEGACY[m]||m;};
-function modeOf(P,i){ if(i<=0||i>=P.length-1) return 'end'; return mdOf(P[i]); }
+function modeOf(P,i){ if(i<=0||i>=P.length-1) return 'end'; const m=mdOf(P[i]); return m==='cvel'?'corner':(m==='flat'?'stop':m); }   // w środku krzywej tylko: gładko, ostro, przystanek (stare zapisy przeliczane)
 const HOLDMODES=['stop'];
 function hasHandles(P,i){ return true; }   // ogonki zawsze widoczne; ciągnięcie ogonka przy 'stałej prędkości' zmienia typ na Ostro/Łagodnie
 function autoHandles(P){   // uchwyty liczone automatycznie: stała prędkość (proste odcinki), przystanek; płasko: dy=0
@@ -568,14 +575,8 @@ function autoHandles(P){   // uchwyty liczone automatycznie: stała prędkość 
     if(mdOf(P[0])==='cvel'){ P[0].ho.dx=(P[1].t-P[0].t)/3; P[0].ho.dy=(P[1].y-P[0].y)/3; }
     if(mdOf(P[n-1])==='cvel'){ P[n-1].hi.dx=(P[n-1].t-P[n-2].t)/3; P[n-1].hi.dy=(P[n-1].y-P[n-2].y)/3; }
   }
-  for(let i=0;i<P.length;i++){   // odcinek przy punkcie 'stała prędkość' jest prosty: prostujemy też uchwyt sąsiada
-    if(mdOf(P[i])!=='cvel') continue;
-    [[i-1,'ho',i],[i+1,'hi',i]].forEach(([j,h])=>{ if(j<0||j>=P.length) return; const q=P[j], mj=mdOf(q); if(mj==='flat'||mj==='stop'||mj==='cvel') return;
-      const a=Math.min(i,j), b=Math.max(i,j), g=(P[b].t-P[a].t)/3, sl=(P[b].y-P[a].y)/(P[b].t-P[a].t);
-      q[h].dx=g; q[h].dy=sl*g; });
-  }
   for(let i=1;i<P.length-1;i++){
-    const p=P[i], m=mdOf(p), gp=p.t-P[i-1].t, gn=P[i+1].t-p.t;
+    const p=P[i], m=modeOf(P,i), gp=p.t-P[i-1].t, gn=P[i+1].t-p.t;
     if(m==='cvel'){
       p.hi.dx=gp/3; p.hi.dy=(p.y-P[i-1].y)/3; p.ho.dx=gn/3; p.ho.dy=(P[i+1].y-p.y)/3;
     } else if(m==='stop'){
@@ -1067,11 +1068,10 @@ function updateFeas(){
   if(!f.D){ html='Podaj drogę (obroty i kroki na obrót) albo ustaw A i B przy połączonym Kawalecie — pokażę prędkość, czas i wykonalność.'; }
   else{
     const fmt=n=>(Math.round(n*10)/10), spr=S.spr||0;
-    html=(f.ok?'<b style="color:var(--ok)">✔ Wykonalne.</b> ':'<b style="color:var(--bad)">⚠ Za szybko — stół nie nadąży.</b> ')
-      +'Szczyt prędkości: <b>'+Math.round(f.vReq).toLocaleString('pl')+' kr/s</b>'+(spr?' = '+fmt(f.vReq/spr*60)+' obr/min stołu':'')+', poziom <b>'+S.cspd+'</b> (limit '+Math.round(f.c.vcap).toLocaleString('pl')+' kr/s).'
-      +'<br>Przyspieszenie: '+Math.round(100*f.aReq*MA/f.c.aMax)+'% limitu. Czas <b>'+S.dur+' s</b>.'
-      +'<br><span style="opacity:.85">Granice: najkrótszy czas <b>'+fmt(f.tmin)+' s</b> · najmniejsza prędkość <b>'+(f.minLvl>22?'>22':f.minLvl)+'</b>'+(f.maxRevs!==null?' · największa droga <b>'+f.maxRevs+' obr.</b>':'')+'</span>'
-      +(f.ok?'':'<br>'+(f.over?'Nawet poziom 22 nie wystarcza. ':'')+'<button id="btnFit" style="padding:4px 10px;min-height:32px;font-size:13px">Ustaw najkrótszy czas ('+fmt(f.tmin)+' s)</button>');
+    html=(f.ok?'<b style="color:var(--ok)">✔ OK</b>':'<b style="color:var(--bad)">⚠ Za szybko</b>')
+      +' · szczyt <b>'+Math.round(f.vReq/100)/10+'k kr/s</b>'+(spr?' ('+Math.round(f.vReq/spr*60)+' obr/min)':'')+' · poz. <b>'+S.cspd+'</b> · przysp. '+Math.round(100*f.aReq*MA/f.c.aMax)+'% · <b>'+S.dur+' s</b>'
+      +'<br><span style="opacity:.8">min czas <b>'+fmt(f.tmin)+' s</b> · min prędk. <b>'+(f.minLvl>22?'>22':f.minLvl)+'</b>'+(f.maxRevs!==null?' · max <b>'+f.maxRevs+' obr.</b>':'')+'</span>'
+      +(f.ok?'':' <button id="btnFit" style="padding:2px 8px;min-height:28px;font-size:12px">Najkrótszy czas ('+fmt(f.tmin)+' s)</button>');
   }
   if(html!==S._feasHtml){ S._feasHtml=html; el.innerHTML=html; }   // nie przebudowuj ramki, gdy nic się nie zmieniło (inaczej przycisk znikał między dotknięciem a puszczeniem)
 }
@@ -1189,7 +1189,7 @@ $('#btnAbort').addEventListener('click',()=>{ clearTimeout(S.repTimer);sendLine(
 function setMode(i,m){
   const P=S.pts, p=P[i]; if(!p) return; const isEnd=(i===0||i===P.length-1); if(isEnd&&m!=='flat'&&m!=='cvel') return;
   histPush(snap(),true); const was=mdOf(p); p.mode=m;
-  if(m==='stop'&&(!(p.hold>0)||was!=='stop')) p.hold=1;
+  if(m==='stop'&&was!=='stop'&&!(p.hold>0)) p.hold=1;
   if(!isEnd&&(m==='smooth'||m==='corner')){   // kliknięcie od razu przekształca kształt przy punkcie
     const pr=P[i-1], nx=P[i+1], gp=p.t-pr.t, gn=nx.t-p.t;
     if(m==='smooth'){ const sl=(nx.y-pr.y)/(nx.t-pr.t), d=Math.min(gp,gn)/2.5; p.hi.dx=d; p.ho.dx=d; p.hi.dy=sl*d; p.ho.dy=sl*d; }
@@ -1204,9 +1204,9 @@ function renderPtPanel(){
   const m=(i>=0&&i<P.length)?modeOf(P,i):null, p=P[i], n=P.length;
   const sig=[n,i,m,p&&p.hold,p&&Math.round(p.y*1000)].join('|'); if(sig===S._ptSig) return; S._ptSig=sig;
   let sum;
-  if(m===null) sum='Punkt: nic nie zaznaczono';
-  else if(m==='end') sum='Punkt '+(i+1)+' z '+n+' ('+(i===0?'początek':'koniec')+'): '+(mdOf(p)==='cvel'?'stała prędkość':'łagodnie');
-  else sum='Punkt '+(i+1)+' z '+n+': '+MODES[m].n;
+  if(m===null) sum='Punkt: brak zaznaczenia';
+  else if(m==='end') sum='Punkt '+(i+1)+'/'+n+' · '+(i===0?'początek':'koniec');
+  else sum='Punkt '+(i+1)+'/'+n+' · '+MODES[m].s;
   $('#ptSum').childNodes.forEach(nd=>{ if(nd.nodeType===3) nd.textContent=''; }); $('#ptSum').insertAdjacentText('beforeend',sum);
   let h='';
   if(m===null) h='<div class="small">Dotknij punktu na wykresie.</div>';
@@ -1222,7 +1222,7 @@ function renderPtPanel(){
     h='<div class="small" style="margin-bottom:6px">Jak krzywa ma przechodzić przez ten punkt:</div><div class="modegrid">';
     for(const k of Object.keys(MODES)){ const d=MODES[k]; h+='<button class="modebtn'+(m===k?' on':'')+'" data-mode="'+k+'" title="'+esc(d.n)+'">'+ico(d.ico)+'<span>'+d.s+'</span></button>'; }
     h+='</div><div class="modedesc"><b>'+MODES[m].n+'</b><br>'+MODES[m].d+'</div>';
-    if(HOLDMODES.includes(m)) h+='<div class="prow" style="margin:4px 0 8px;grid-template-columns:minmax(0,1fr) 90px"><label>'+'Czas postoju [s]'+'</label><input id="holdSec" type="number" min="0.2" max="600" step="0.1" value="'+(p.hold||1)+'"></div>';
+    if(HOLDMODES.includes(m)) h+='<div class="prow" style="margin:4px 0 8px;grid-template-columns:minmax(0,1fr) 90px"><label>'+'Czas postoju [s]'+'</label><input id="holdSec" type="number" min="0" max="600" step="0.1" value="'+(p.hold>=0?p.hold:1)+'"></div>';
   }
   if(m!==null){
     h+='<div class="small" style="margin:8px 0 6px">Pozycja punktu:</div><div class="row" style="gap:6px">'
@@ -1236,7 +1236,7 @@ $('#ptBody').addEventListener('click',e=>{
   if(b.dataset.mode) setMode(S.sel,b.dataset.mode);
   else if(b.dataset.align) alignTo(S.sel,b.dataset.align==='first'?0:S.pts.length-1);
 });
-$('#ptBody').addEventListener('input',e=>{ if(e.target.id==='holdSec'){ const v=+e.target.value, p=S.pts[S.sel]; if(p&&v>=0.2){ p.hold=Math.min(v,600); S._ptSig=null; persist(); draw(); } } });
+$('#ptBody').addEventListener('input',e=>{ if(e.target.id==='holdSec'){ const v=+e.target.value, p=S.pts[S.sel]; if(p&&v>=0){ p.hold=Math.min(v,600); S._ptSig=null; persist(); draw(); } } });
 /* ---- zapisane krzywe ---- */
 function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 function persist(){store('kawalet.last',{pts:S.pts,dur:S.dur}); if(typeof savePresetState==='function') savePresetState()}
