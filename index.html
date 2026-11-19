@@ -235,6 +235,14 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 .modedesc{font-size:12px;line-height:1.3;margin-top:6px}
 .holdin{float:right;display:inline-flex;gap:4px;align-items:center;font-size:12px;margin-left:6px}
 .holdin input{width:64px!important;min-height:28px!important;padding:2px 6px!important}
+.ptlay{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+.qbar2{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.qbar2 button{min-height:40px!important;padding:3px 1px!important;font-size:10.5px!important;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.1;letter-spacing:0!important}
+.qbar2 button .ic{width:16px!important;height:16px!important;margin:0!important}
+.runcol{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.runcol button{min-height:40px!important;padding:3px 1px!important;font-size:10.5px!important;display:flex!important;flex-direction:column;align-items:center;gap:1px;letter-spacing:0!important}
+.modebtn{min-height:62px!important;padding:8px 2px!important;gap:4px!important}
+.modebtn .ic{width:26px!important;height:26px!important}
 </style>
 </head>
 <body>
@@ -372,20 +380,20 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 
     <details id="ptPanel" class="card dcard" open>
       <summary data-ico="smooth" id="ptSum">Punkt: przejście i pozycja</summary>
-      <div class="dbody ptlay"><div id="ptBody"></div><div class="ptside" id="runRow">
-      <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
-      <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
-      <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
-    </div></div>
-    </details>
-
-    <div class="qbar">
+      <div class="dbody ptlay"><div id="ptBody"></div><div class="ptside"><div class="qbar2">
       <button data-cmd="HOME" data-ico="home">HOME</button>
       <button data-cmd="SETA" data-ico="pinA">Ust. A</button>
       <button data-cmd="SETB" data-ico="pinB">Ust. B</button>
       <button data-cmd="GOA" data-ico="gotoA">Do A</button>
       <button data-cmd="GOB" data-ico="gotoB">Do B</button>
-    </div>
+    </div><div id="runRow" class="runcol">
+      <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
+      <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
+      <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
+    </div></div></div>
+    </details>
+
+    
     
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
 
@@ -507,7 +515,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b36 (Pult)';
+const PAGE_VERSION='19.11, b37 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
