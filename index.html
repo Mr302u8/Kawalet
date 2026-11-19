@@ -269,6 +269,18 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 .posread b{font-size:17px;color:var(--text)}
 .ctl3 .ctlpad2{grid-column:1/-1;height:56px!important}
 .ctl3 .ctlpad2 .thumb{width:38px!important;height:38px!important;margin:-19px 0 0 -19px!important}
+/* b42: jedna linia, ujednolicone czcionki */
+.twin{display:grid;grid-template-columns:1fr;gap:8px;align-items:stretch}
+.twin>.sect{margin-top:8px;display:flex;flex-direction:column}
+@media(min-width:620px){.twin{grid-template-columns:1fr 1fr}.twin>.sect{margin-top:8px}}
+.ctl3>button,.modebtn,.posread{font-size:12px!important;font-weight:700!important;letter-spacing:0!important;text-transform:none!important}
+.posread{font-weight:600!important}.posread b{font-size:14px!important;font-weight:700}
+.ctl3>button .ic,.modebtn .ic{width:18px!important;height:18px!important;stroke-width:2}
+.ctl3>button,.modebtn{min-height:48px!important}
+.ctl3 .ctlpad2{height:48px!important}
+#ptPanel>summary,.sectT{font-size:11px!important;font-weight:800!important;letter-spacing:.08em;text-transform:uppercase}
+.modedesc,.modedesc *{font-size:12px!important}
+.modedesc b{font-weight:700}
 </style>
 </head>
 <body>
@@ -404,6 +416,7 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
       </div>
     </div>
 
+    <div class="twin">
     <div class="card sect">
       <div class="sectT">Sterowanie</div>
       <div class="ctl3">
@@ -424,6 +437,7 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
       <summary data-ico="smooth" id="ptSum">Punkt: przejście i pozycja</summary>
       <div class="dbody" id="ptBody"></div>
     </details>
+    </div>
 
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
 
@@ -545,7 +559,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b41 (Pult)';
+const PAGE_VERSION='19.11, b42 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
