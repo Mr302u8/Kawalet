@@ -243,6 +243,17 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 .runcol button{min-height:40px!important;padding:3px 1px!important;font-size:10.5px!important;display:flex!important;flex-direction:column;align-items:center;gap:1px;letter-spacing:0!important}
 .modebtn{min-height:62px!important;padding:8px 2px!important;gap:4px!important}
 .modebtn .ic{width:26px!important;height:26px!important}
+.ptlay{grid-template-columns:1fr 1fr 1fr!important;gap:6px!important}
+.ptlay .posbox{padding:4px!important;gap:3px!important;border-radius:6px}
+.ptlay .posbox .small{font-size:10.5px}
+.ptlay .jogpad .padlbl{font-size:10px;bottom:2px}
+.modegrid{grid-template-columns:repeat(2,1fr)!important;gap:4px!important}
+.modebtn{min-height:42px!important;padding:3px 1px!important;gap:1px!important;font-size:10px!important}
+.modebtn .ic{width:18px!important;height:18px!important}
+.qbar2{grid-template-columns:repeat(2,1fr)!important}
+.qbar2 button,.runcol button{min-height:34px!important;font-size:10px!important}
+.runcol{grid-template-columns:repeat(3,1fr)!important;margin-top:2px}
+.modedesc{font-size:10.5px!important}
 </style>
 </head>
 <body>
@@ -390,7 +401,11 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
       <button id="btnSend" class="acc" data-ico="send" style="flex:1">Wyślij</button>
       <button id="btnRun" class="ok" data-ico="play" style="flex:1">Start</button>
       <button id="btnAbort" data-ico="abort" style="flex:1">Przerwij</button>
-    </div></div></div>
+    </div></div><div class="posbox">
+        <div class="jogpad" style="height:64px"><div class="thumb" style="width:34px;height:34px;margin:-17px 0 0 -17px"></div><div class="padlbl">przesuń ← →</div></div>
+        
+        <div class="small">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></div>
+      </div></div>
     </details>
 
     
@@ -419,11 +434,7 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
         </details>
       </div>
 
-      <div class="posbox">
-        <div class="jogpad" style="height:96px"><div class="thumb" style="width:48px;height:48px;margin:-24px 0 0 -24px"></div><div class="padlbl">ustaw pozycję: przesuń palcem w lewo / prawo, puść = stop</div></div>
-        
-        <div class="small">Pozycja: <b id="postxt2" style="color:var(--text)">0 %</b></div>
-      </div>
+      
     </div>
     <div class="small">Dotknij pustego miejsca = nowy punkt. Dotknij punktu = uchwyty (kwadraty) do ustawiania ramp. Kropkę na krzywej możesz przeciągać (poza punktami). Oś pozioma: czas, pionowa: położenie od A (dół) do B (góra).</div>
   </div>
@@ -515,7 +526,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b37 (Pult)';
+const PAGE_VERSION='19.11, b38 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
