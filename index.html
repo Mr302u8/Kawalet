@@ -281,6 +281,23 @@ html[data-theme="pult"] #btnEstop.tile{aspect-ratio:auto!important;border-radius
 #ptPanel>summary,.sectT{font-size:11px!important;font-weight:800!important;letter-spacing:.08em;text-transform:uppercase}
 .modedesc,.modedesc *{font-size:12px!important}
 .modedesc b{font-weight:700}
+/* b43: węższe przyciski w jednym rzędzie, spokojniejszy wygląd (ramki z podpisem na krawędzi) */
+.sect{position:relative;border:1px solid var(--line2,var(--line))!important;border-radius:4px!important;background:transparent!important;box-shadow:none!important;padding:14px 8px 8px!important;margin-top:12px!important}
+.sectT{position:absolute!important;top:-8px;left:10px;margin:0!important;padding:0 6px!important;border:0!important;background:var(--bg);font-size:10.5px!important;letter-spacing:.1em;color:var(--dim)}
+details.sect>summary{position:absolute;top:-9px;left:10px;padding:0 6px;background:var(--bg);font-size:10.5px!important;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--dim);min-height:0!important;list-style:none}
+details.sect>summary .ic{display:none}
+details.sect>.dbody{padding:0!important}
+.modegrid{display:flex!important;flex-wrap:nowrap;gap:4px!important}
+.modebtn{flex:1 1 0!important;max-width:66px;min-width:0;min-height:40px!important;border-radius:3px!important;box-shadow:none!important;font-size:11px!important;font-weight:600!important;padding:2px 1px!important}
+.modebtn .ic{width:16px!important;height:16px!important}
+.modebtn span{white-space:normal;overflow-wrap:anywhere;hyphens:auto}
+.ctl3{max-width:340px;gap:4px!important}
+.ctl3>button{min-height:38px!important;border-radius:3px!important;box-shadow:none!important;font-size:11.5px!important;font-weight:600!important;flex-direction:row!important;gap:5px!important}
+.ctl3>button .ic{width:15px!important;height:15px!important}
+.ctl3 .ctlpad2{height:34px!important;border-radius:3px!important}
+.ctl3 .ctlpad2 .thumb{width:26px!important;height:26px!important;margin:-13px 0 0 -13px!important}
+.posread{border-radius:3px!important;background:transparent!important}
+.twin{gap:12px!important}
 </style>
 </head>
 <body>
@@ -559,7 +576,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b42 (Pult)';
+const PAGE_VERSION='19.11, b43 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
