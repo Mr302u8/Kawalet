@@ -298,6 +298,11 @@ details.sect>.dbody{padding:0!important}
 .ctl3 .ctlpad2 .thumb{width:26px!important;height:26px!important;margin:-13px 0 0 -13px!important}
 .posread{border-radius:3px!important;background:transparent!important}
 .twin{gap:12px!important}
+.twin>#ptPanel{order:1}.twin>.sect:not(#ptPanel):not(#repSect){order:2}.twin>#repSect{order:3}
+.reprow{display:grid!important;grid-template-columns:minmax(0,1fr) 70px!important;gap:6px;align-items:center}
+.reprow label.small{grid-column:1/-1}
+@media(min-width:820px){.twin{grid-template-columns:1.25fr 1fr 1fr!important}}
+@media(min-width:620px) and (max-width:819px){.twin>#repSect{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -454,6 +459,14 @@ details.sect>.dbody{padding:0!important}
       <summary data-ico="smooth" id="ptSum">Punkt: przejście i pozycja</summary>
       <div class="dbody" id="ptBody"></div>
     </details>
+        <div class="card sect" id="repSect">
+      <div class="sectT">Powtarzanie (ping-pong A→B→A→B…)</div>
+      <div class="prow reprow">
+        <label>Ile razy</label><input id="repN2" type="number" min="1" max="100000" step="1" value="1">
+        <label class="small" style="display:flex;gap:6px;align-items:center;white-space:nowrap"><input type="checkbox" id="repInf2"> ∞ bez końca</label>
+      </div>
+      <div class="small" id="repHint2"></div>
+    </div>
     </div>
 
     <div id="feas" class="small" style="padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--inset)"></div>
@@ -479,12 +492,7 @@ details.sect>.dbody{padding:0!important}
           <div class="prow" style="margin-top:8px"><label>Droga A→B [°] (opcja)</label><input id="span" type="number" min="0" max="3600" step="1" placeholder="—"></div>
           <span class="small" id="cinfo"></span>
         </details>
-      <div class="sectT" style="margin-top:12px">Powtarzanie (ping-pong A→B→A→B…)</div>
-      <div class="prow" style="grid-template-columns:minmax(0,1fr) 84px auto;align-items:center">
-        <label>Ile razy</label><input id="repN2" type="number" min="1" max="100000" step="1" value="1">
-        <label class="small" style="display:flex;gap:6px;align-items:center;white-space:nowrap"><input type="checkbox" id="repInf2"> ∞ bez końca</label>
-      </div>
-      <div class="small" id="repHint2"></div>
+
     </div>
     <div class="small">Dotknij pustego miejsca = nowy punkt. Dotknij punktu = uchwyty (kwadraty) do ustawiania ramp. Kropkę na krzywej możesz przeciągać (poza punktami). Oś pozioma: czas, pionowa: położenie od A (dół) do B (góra).</div>
   </div>
@@ -576,7 +584,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b43 (Pult)';
+const PAGE_VERSION='19.11, b44 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
