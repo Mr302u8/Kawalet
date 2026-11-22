@@ -324,6 +324,16 @@ details.sect>.dbody{padding:0!important}
 .reprow{grid-template-columns:minmax(0,1fr) 64px!important}
 .reprow input[type=number]{width:100%!important;min-width:0}
 #repSect .small{font-size:11px}
+/* b51: równy układ na szerokim ekranie (bez ręcznych przesunięć) */
+@media(min-width:900px){
+ #tab-ctl.active{display:block;column-count:2;column-gap:12px;max-width:1200px;margin:0 auto}
+ #tab-ctl>*{break-inside:avoid;margin-left:0!important;margin-right:0!important;width:auto!important}
+ #tab-ctl>:first-child{column-span:all}
+}
+.ctl3>button{min-height:60px!important}
+.ctl3 .ctlpad2{height:60px!important}
+.jogpad .padlbl{top:5px;bottom:auto!important;font-size:11px}
+.jogpad .thumb{top:60%!important}
 </style>
 </head>
 <body>
@@ -607,7 +617,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b50 (Pult)';
+const PAGE_VERSION='19.11, b51 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -1496,9 +1506,9 @@ $('#ptSum').addEventListener('click',e=>e.preventDefault());   // panel punktu z
 
 /* ===== Edytor układu: przesuwanie i skalowanie dowolnego elementu (b46) ===== */
 (function(){
- const LS='kawalet.layout2'; let L={}; try{L=JSON.parse(localStorage.getItem(LS))||{}}catch(e){}
+ const LS='kawalet.layout3'; let L={}; try{L=JSON.parse(localStorage.getItem(LS))||{}}catch(e){}
  const root=document.querySelector('main'); if(!root) return;
- const DEF_WIDE={"0.0":{"w":620},"0.5":{"w":475,"x":480,"y":-476,"h":254},"0.6":{"w":264,"x":46,"y":-654,"h":65},"0.1":{"w":434,"h":168},"0.2":{"w":473,"x":477,"y":-191,"h":183},"0.3":{"w":354,"x":990,"y":-392,"h":191},"0.4":{"w":373,"x":38,"y":-394,"h":60},"0.2.1.1":{"x":-213,"y":-2},"0.2.1.0":{"x":159,"y":1},"0.2.1.4":{"x":228,"y":8},"0.2.1.5":{"x":-171,"y":6},"0.4.0":{"x":-1,"y":-1},"1.0.2.0.1.9":{"w":432,"h":63,"x":-1,"y":3},"1.0.2.0.1.7":{"w":183,"h":67},"1.0.2.0.1.4":{"x":0,"y":1,"w":182,"h":66},"1.0.2.0.1.1":{"x":0,"y":0,"w":180,"h":80}};   // układ domyślny na szeroki ekran (laptop), ułożony przez użytkownika 22.11.2026
+ const DEF_WIDE={};   // układ domyślny na szeroki ekran (laptop), ułożony przez użytkownika 22.11.2026
  if(!Object.keys(L).length&&innerWidth>=900) L=JSON.parse(JSON.stringify(DEF_WIDE));
  const save=()=>{try{localStorage.setItem(LS,JSON.stringify(L))}catch(e){}};
  const keyOf=el=>{const p=[];while(el&&el!==root){const par=el.parentElement;if(!par)return null;p.unshift(Array.prototype.indexOf.call(par.children,el));el=par}return p.join('.')};
