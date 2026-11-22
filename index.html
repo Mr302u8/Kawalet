@@ -303,6 +303,17 @@ details.sect>.dbody{padding:0!important}
 .reprow label.small{grid-column:1/-1}
 @media(min-width:820px){.twin{grid-template-columns:1.25fr 1fr 1fr!important}}
 @media(min-width:620px) and (max-width:819px){.twin>#repSect{grid-column:1/-1}}
+/* b45: Punkt 1 : Sterowanie 2 : Powtarzanie 1, zwarta karta Ruch */
+@media(min-width:820px){.twin{grid-template-columns:1fr 2fr 1fr!important}}
+#ptPanel>summary{pointer-events:none;cursor:default}
+.params.sect{display:grid!important;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:12px;max-width:560px}
+.params.sect>.row,.params.sect>.small,.params.sect>details,.params.sect>.sectT{grid-column:1/-1}
+.params.sect .prow{grid-template-columns:minmax(0,1fr) 64px!important;gap:3px 6px;margin:0}
+.params.sect .prow input[type=range]{grid-column:1/-1}
+.params.sect .prow label{font-size:12px}
+.params.sect input[type=number],.params.sect select{min-height:30px!important;padding:3px 6px!important;font-size:12px!important}
+.params.sect .toolsel{min-height:30px!important}
+@media(max-width:560px){.params.sect{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -395,6 +406,7 @@ details.sect>.dbody{padding:0!important}
     <div class="dbody">
       <button id="btnBoot" data-ico="gear" style="width:100%">Tryb programowania (BOOT)</button>
       <div style="font-size:12px;opacity:.7;margin-top:6px">Restartuje Teensy do wgrywania programu kablem USB. Tylko gdy silnik stoi.</div>
+      <button id="btnLayout" data-ico="gear" style="width:100%;margin-top:8px">Edytor układu (przesuwaj i skaluj elementy)</button>
       <button id="btnForce" data-ico="reset" style="width:100%;margin-top:8px">Wymuś aktualizację strony</button>
       <div id="verTxt" style="font-size:12px;opacity:.7;margin-top:6px"></div>
     </div>
@@ -584,7 +596,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b44 (Pult)';
+const PAGE_VERSION='19.11, b46 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -1311,7 +1323,7 @@ function renderPtPanel(){
     for(const k of Object.keys(MODES)){ const d=MODES[k]; h+='<button class="modebtn'+(m===k?' on':'')+'" data-mode="'+k+'" title="'+esc(d.n)+'">'+ico(d.ico)+'<span>'+d.s+'</span></button>'; }
     h+=ALIGN+'</div><div class="modedesc"><b>'+MODES[m].n+'</b>'+(HOLDMODES.includes(m)?'<span class="holdin">Czas [s] <input id="holdSec" type="number" min="0" max="600" step="0.1" value="'+(p.hold>=0?p.hold:1)+'"></span>':'')+'<br>'+MODES[m].d+'</div>';
   }
-  el.innerHTML=h;
+  el.innerHTML=h; if(window.applyLayout) applyLayout();
 }
 $('#ptBody').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b||b.disabled) return;
@@ -1467,6 +1479,62 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   setTimeout(bleRestoreOnLoad,300);
   log('Tryb symulacji. Naciśnij „Połącz”, aby połączyć się przez Bluetooth (w Bluefy).');
   log('Web Bluetooth w tej przegladarce: '+(navigator.bluetooth?'TAK':'NIE')+' | wersja strony '+PAGE_VERSION);
+})();
+
+$('#ptSum').addEventListener('click',e=>e.preventDefault());   // panel punktu zawsze rozwinięty
+
+/* ===== Edytor układu: przesuwanie i skalowanie dowolnego elementu (b46) ===== */
+(function(){
+ const LS='kawalet.layout1'; let L={}; try{L=JSON.parse(localStorage.getItem(LS))||{}}catch(e){}
+ const root=document.querySelector('main'); if(!root) return;
+ const save=()=>{try{localStorage.setItem(LS,JSON.stringify(L))}catch(e){}};
+ const keyOf=el=>{const p=[];while(el&&el!==root){const par=el.parentElement;if(!par)return null;p.unshift(Array.prototype.indexOf.call(par.children,el));el=par}return p.join('.')};
+ const byKey=k=>{let el=root;for(const i of k.split('.')){el=el&&el.children[+i]}return el||null};
+ function applyOne(el,v){ el.style.transform=(v.x||v.y)?'translate('+(v.x||0)+'px,'+(v.y||0)+'px)':''; el.style.width=v.w?v.w+'px':''; if(v.w) el.style.flex='none'; el.style.height=v.h?v.h+'px':''; el.style.fontSize=v.f?v.f+'px':''; }
+ function applyAll(){ for(const k in L){ const el=byKey(k); if(el) applyOne(el,L[k]); } }
+ window.applyLayout=applyAll; applyAll();
+ const PICK='button,.sect,.prow,.posread,.jogpad,#feas,input,select,label,.modedesc,.small,summary,canvas,.sectT';
+ let on=false, sel=null, ov=null, bar=null, drag=null, raf=0;
+ const st=document.createElement('style'); st.textContent='.lay-ov{position:fixed;z-index:99998;outline:2px dashed #e53935;pointer-events:none}.lay-ov i{position:absolute;right:-8px;bottom:-8px;width:18px;height:18px;background:#e53935;border:2px solid #fff;border-radius:50%;pointer-events:auto;cursor:nwse-resize;touch-action:none}.lay-bar{position:fixed;z-index:99999;left:50%;bottom:10px;transform:translateX(-50%);background:#111;color:#fff;border-radius:8px;padding:6px 8px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;font:12px system-ui;max-width:96vw;justify-content:center}.lay-bar button{min-height:30px!important;padding:3px 9px!important;font-size:12px!important;border-radius:5px!important;text-transform:none!important;background:#333!important;color:#fff!important;border:1px solid #666!important;box-shadow:none!important}body.layedit main *{touch-action:none;cursor:move}body.layedit main button{pointer-events:auto}'; document.head.appendChild(st);
+ function place(){ if(!on||!sel||!ov) return; const r=sel.getBoundingClientRect(); ov.style.left=r.left+'px';ov.style.top=r.top+'px';ov.style.width=r.width+'px';ov.style.height=r.height+'px'; const k=keyOf(sel), v=L[k]||{}; info.textContent=(sel.id?'#'+sel.id:sel.tagName.toLowerCase())+' '+Math.round(r.width)+'×'+Math.round(r.height)+(v.x||v.y?' ('+Math.round(v.x||0)+','+Math.round(v.y||0)+')':''); }
+ function loop(){ place(); raf=on?requestAnimationFrame(loop):0 }
+ let info;
+ function mk(){
+  ov=document.createElement('div'); ov.className='lay-ov'; ov.innerHTML='<i></i>'; ov.style.display='none'; document.body.appendChild(ov);
+  bar=document.createElement('div'); bar.className='lay-bar';
+  bar.innerHTML='<span id="layInfo" style="opacity:.85">Dotknij elementu</span><button data-a="up">↑ rodzic</button><button data-a="fm">A−</button><button data-a="fp">A+</button><button data-a="rs">Cofnij element</button><button data-a="cp">Kopiuj układ</button><button data-a="ra">Wyzeruj wszystko</button><button data-a="ok">Gotowe</button>';
+  document.body.appendChild(bar); info=bar.querySelector('#layInfo');
+  bar.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const a=b.dataset.a; const k=sel?keyOf(sel):null;
+   if(a==='up'&&sel&&sel.parentElement&&sel.parentElement!==root){ sel=sel.parentElement; }
+   else if((a==='fm'||a==='fp')&&sel){ const cur=parseFloat(getComputedStyle(sel).fontSize)||12; const v=L[k]=L[k]||{}; v.f=Math.max(8,Math.min(40,Math.round(cur+(a==='fp'?1:-1)))); applyOne(sel,v); save(); }
+   else if(a==='rs'&&sel){ delete L[k]; sel.style.cssText=''; save(); }
+   else if(a==='cp'){ const o=JSON.stringify(L,null,1); navigator.clipboard&&navigator.clipboard.writeText(o).then(()=>{b.textContent='Skopiowano';setTimeout(()=>b.textContent='Kopiuj układ',1200)}); }
+   else if(a==='ra'){ if(confirm('Wyzerować cały własny układ?')){ for(const kk in L){ const el=byKey(kk); if(el) el.style.cssText=''; } L={}; save(); } }
+   else if(a==='ok'){ toggle(false); }
+   place(); });
+ }
+ function toggle(v){ on=v===undefined?!on:v; if(on&&!bar) mk(); document.body.classList.toggle('layedit',on); if(bar) bar.style.display=on?'flex':'none'; if(ov) ov.style.display=(on&&sel)?'block':'none'; if(on&&!raf) loop(); }
+ window.toggleLayoutEdit=toggle;
+ const blockAll=e=>{ if(on&&root.contains(e.target)){ e.stopPropagation(); e.preventDefault(); } };
+ ['click','dblclick','mousedown','touchstart','contextmenu'].forEach(t=>window.addEventListener(t,blockAll,true));
+ window.addEventListener('pointerdown',e=>{
+  if(!on) return;
+  if(ov&&e.target.closest&&e.target.closest('.lay-ov')){ const k=keyOf(sel); const r=sel.getBoundingClientRect(); drag={mode:'rz',k,x0:e.clientX,y0:e.clientY,w0:r.width,h0:r.height}; e.stopPropagation();e.preventDefault(); return; }
+  if(!root.contains(e.target)) return;
+  const el=e.target.closest(PICK); if(!el||!root.contains(el)) return;
+  sel=el; ov.style.display='block'; const k=keyOf(el); if(k===null) return; const v=L[k]||{};
+  drag={mode:'mv',k,x0:e.clientX,y0:e.clientY,bx:v.x||0,by:v.y||0}; e.stopPropagation(); e.preventDefault(); place();
+ },true);
+ window.addEventListener('pointermove',e=>{
+  if(!on||!drag) return; const el=byKey(drag.k); if(!el) return; const v=L[drag.k]=L[drag.k]||{};
+  if(drag.mode==='mv'){ v.x=Math.round(drag.bx+e.clientX-drag.x0); v.y=Math.round(drag.by+e.clientY-drag.y0); }
+  else { v.w=Math.max(20,Math.round(drag.w0+e.clientX-drag.x0)); v.h=Math.max(16,Math.round(drag.h0+e.clientY-drag.y0)); }
+  applyOne(el,v); place(); e.preventDefault();
+ },true);
+ const up=()=>{ if(drag){ drag=null; save(); } };
+ window.addEventListener('pointerup',up,true); window.addEventListener('pointercancel',up,true);
+ const b=document.getElementById('btnLayout'); if(b) b.addEventListener('click',()=>{ const t=document.querySelector('[data-tab="crv"]')||document.querySelector('#tabs button'); toggle(true); });
+ if(/[?&]layout=1/.test(location.search)) toggle(true);
 })();
 </script>
 </body>
