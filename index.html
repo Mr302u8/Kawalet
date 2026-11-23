@@ -326,10 +326,13 @@ details.sect>.dbody{padding:0!important}
 #repSect .small{font-size:11px}
 /* b51: równy układ na szerokim ekranie (bez ręcznych przesunięć) */
 @media(min-width:900px){
- #tab-ctl.active{display:block;column-count:2;column-gap:12px;max-width:1200px;margin:0 auto}
- #tab-ctl>*{break-inside:avoid;margin-left:0!important;margin-right:0!important;width:auto!important}
- #tab-ctl>:first-child{column-span:all}
+ #tab-ctl.active{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;align-content:start;max-width:1500px;margin:0 auto}
+ #tab-ctl>*{margin:0!important;width:auto!important;min-width:0}
+ #tab-ctl>:nth-child(1){grid-column:1/-1;order:1}
+ #tab-ctl>:nth-child(2){order:2}#tab-ctl>:nth-child(3){order:3}#tab-ctl>:nth-child(4){order:4}
+ #tab-ctl>:nth-child(6){order:5}#tab-ctl>:nth-child(5){order:6}#tab-ctl>:nth-child(7){order:7}
 }
+@media(min-width:1150px){#tab-ctl.active{grid-template-columns:1fr 1fr 1fr}}
 .ctl3>button{min-height:60px!important}
 .ctl3 .ctlpad2{height:60px!important}
 .jogpad .padlbl{top:5px;bottom:auto!important;font-size:11px}
@@ -617,7 +620,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b51 (Pult)';
+const PAGE_VERSION='19.11, b52 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -1506,7 +1509,7 @@ $('#ptSum').addEventListener('click',e=>e.preventDefault());   // panel punktu z
 
 /* ===== Edytor układu: przesuwanie i skalowanie dowolnego elementu (b46) ===== */
 (function(){
- const LS='kawalet.layout3'; let L={}; try{L=JSON.parse(localStorage.getItem(LS))||{}}catch(e){}
+ const LS='kawalet.layout4'; let L={}; try{L=JSON.parse(localStorage.getItem(LS))||{}}catch(e){}
  const root=document.querySelector('main'); if(!root) return;
  const DEF_WIDE={};   // układ domyślny na szeroki ekran (laptop), ułożony przez użytkownika 22.11.2026
  if(!Object.keys(L).length&&innerWidth>=900) L=JSON.parse(JSON.stringify(DEF_WIDE));
