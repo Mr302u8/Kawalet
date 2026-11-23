@@ -337,6 +337,9 @@ details.sect>.dbody{padding:0!important}
 .ctl3 .ctlpad2{height:60px!important}
 .jogpad .padlbl{top:5px;bottom:auto!important;font-size:11px}
 .jogpad .thumb{top:60%!important}
+#speedSum{pointer-events:none;cursor:default}
+#speedSum::-webkit-details-marker,#ptSum::-webkit-details-marker{display:none}
+#tab-ctl>details:not(#speedCard){align-self:start}
 </style>
 </head>
 <body>
@@ -378,8 +381,8 @@ details.sect>.dbody{padding:0!important}
     </div>
   </div>
 
-  <details class="card dcard" open>
-    <summary data-ico="sliders">Prędkość i rampy</summary>
+  <details class="card dcard" id="speedCard" open>
+    <summary data-ico="sliders" id="speedSum">Prędkość i rampy</summary>
     <div class="dbody">
       <label>Prędkość maksymalna: <b id="spdv">10</b> / 22</label>
       <input id="spd" type="range" min="1" max="22" step="0.1" value="10">
@@ -620,7 +623,7 @@ const ICONS={
 };
 const ico=n=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 function injectIcons(root){ (root||document).querySelectorAll('[data-ico]').forEach(b=>{ if(!b.querySelector(':scope > svg.ic')) b.insertAdjacentHTML('afterbegin',ico(b.dataset.ico)); }); }
-const PAGE_VERSION='19.11, b52 (Pult)';
+const PAGE_VERSION='19.11, b53 (Pult)';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ========================= STAN ========================= */
@@ -1562,6 +1565,8 @@ $('#ptSum').addEventListener('click',e=>e.preventDefault());   // panel punktu z
  const b=document.getElementById('btnLayout'); if(b) b.addEventListener('click',()=>{ const t=document.querySelector('[data-tab="crv"]')||document.querySelector('#tabs button'); toggle(true); });
  if(/[?&]layout=1/.test(location.search)) toggle(true);
 })();
+
+$('#speedSum').addEventListener('click',e=>e.preventDefault());   // prędkość i rampy zawsze rozwinięte
 </script>
 </body>
 </html>
